@@ -9,16 +9,29 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [currencyPairs, setCurrencyPairs] = useState([]);
+  const [selectedPair, setSelectedPair] = useState('EUR/USD');
   const [accountSettings, setAccountSettings] = useState({
     accountBalance: 1000,
-    monthlyTarget: 6500
+    targetProfit: 50  // Changed from monthlyTarget to targetProfit per trade
   });
+
+  useEffect(() => {
+    // Fetch available currency pairs
+    axios.get('http://localhost:5000/api/currency-pairs')
+      .then(response => {
+        setCurrencyPairs(response.data);
+      })
+      .catch(err => console.error('Error fetching currency pairs:', err));
+  }, []);
 
   const fetchAnalysis = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:5000/api/analysis');
+      const response = await axios.get('http://localhost:5000/api/analysis', {
+        params: { pair: selectedPair }
+      });
       setAnalysis(response.data);
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (err) {
@@ -34,6 +47,7 @@ function App() {
     setError(null);
     try {
       const response = await axios.post('http://localhost:5000/api/analyze-now', {
+        currencyPair: selectedPair,
         timeframe,
         accountSettings
       });
@@ -58,21 +72,23 @@ function App() {
     }
   };
 
+  const handlePairChange = (pair) => {
+    setSelectedPair(pair);
+    setAnalysis(null); // Clear previous analysis
+  };
+
   useEffect(() => {
-    fetchAnalysis();
-    
-    // Refresh every minute
-    const interval = setInterval(fetchAnalysis, 60000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    if (selectedPair) {
+      fetchAnalysis();
+    }
+  }, [selectedPair]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>EUR/USD Trading Assistant</h1>
+        <h1>Forex Trading Assistant</h1>
         <div className="header-info">
-          <span>Multi-Time Analysis</span>
+          <span>Multi-Currency Analysis</span>
           {lastUpdate && <span>Last Update: {lastUpdate}</span>}
         </div>
       </header>
@@ -81,9 +97,21 @@ function App() {
         {loading && <div className="loading">Loading analysis...</div>}
         {error && <div className="error">{error}</div>}
         
+        <div className="currency-selector">
+          {currencyPairs.map(pair => (
+            <button
+              key={pair}
+              onClick={() => handlePairChange(pair)}
+              className={selectedPair === pair ? 'active' : ''}
+            >
+              {pair}
+            </button>
+          ))}
+        </div>
+        
         <div className="controls">
           <button onClick={() => runAnalysisNow('current')} disabled={loading}>
-            Analyze Now
+            Analyze {selectedPair} Now
           </button>
           <button onClick={() => runAnalysisNow('london-open')} disabled={loading}>
             London Open Analysis
@@ -107,8 +135,8 @@ function App() {
         
         {analysis && !analysis.decision && (
           <div className="no-data">
-            <p>No analysis available yet.</p>
-            <p>Click 'Analyze Now' or wait for scheduled analysis.</p>
+            <p>No analysis available yet for {selectedPair}.</p>
+            <p>Click 'Analyze Now' to run analysis.</p>
           </div>
         )}
       </main>

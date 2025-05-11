@@ -14,31 +14,49 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Store latest analysis
-let latestAnalysis = null;
+// Store latest analysis for each currency pair
+let analysisCache = {};
 
-// Default account settings
+// Default account settings - now with £50 target per trade
 let defaultAccountSettings = {
   accountBalance: 1000,  // £1000
-  monthlyTarget: 6500    // £6500
+  targetProfit: 50       // £50 per trade (5% return)
 };
 
-// API endpoint to get latest analysis
+// API endpoint to get available currency pairs
+app.get('/api/currency-pairs', (req, res) => {
+  const pairs = ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD', 'GBP/JPY', 'USD/ZAR', 'EUR/GBP'];
+  res.json(pairs);
+});
+
+// API endpoint to get latest analysis for a specific pair
 app.get('/api/analysis', (req, res) => {
-  if (latestAnalysis) {
-    res.json(latestAnalysis);
+  const pair = req.query.pair;
+  if (!pair) {
+    res.status(400).json({ error: 'Currency pair required' });
+    return;
+  }
+  
+  if (analysisCache[pair]) {
+    res.json(analysisCache[pair]);
   } else {
-    res.json({ message: 'No analysis available yet' });
+    res.json({ message: 'No analysis available yet for ' + pair });
   }
 });
 
-// API endpoint to trigger analysis manually with options
+// API endpoint to trigger analysis for a specific currency pair
 app.post('/api/analyze-now', async (req, res) => {
   try {
-    const { timeframe = 'current', accountSettings = defaultAccountSettings } = req.body;
-    console.log(`Manual analysis triggered for ${timeframe}`);
-    latestAnalysis = await runAnalysis(timeframe, accountSettings);
-    res.json(latestAnalysis);
+    const { 
+      currencyPair = 'EUR/USD', 
+      timeframe = 'current', 
+      accountSettings = defaultAccountSettings 
+    } = req.body;
+    
+    console.log(`Manual analysis triggered for ${currencyPair} at ${timeframe}`);
+    const analysis = await runAnalysis(currencyPair, timeframe, accountSettings);
+    analysisCache[currencyPair] = analysis;
+    res.json(analysis);
   } catch (error) {
     console.error('Analysis error:', error);
     res.status(500).json({ error: 'Analysis failed' });
@@ -47,10 +65,10 @@ app.post('/api/analyze-now', async (req, res) => {
 
 // API endpoint to update account settings
 app.post('/api/account-settings', (req, res) => {
-  const { accountBalance, monthlyTarget } = req.body;
-  if (accountBalance && monthlyTarget) {
+  const { accountBalance, targetProfit } = req.body;
+  if (accountBalance && targetProfit) {
     defaultAccountSettings.accountBalance = accountBalance;
-    defaultAccountSettings.monthlyTarget = monthlyTarget;
+    defaultAccountSettings.targetProfit = targetProfit;
     res.json({ message: 'Account settings updated', settings: defaultAccountSettings });
   } else {
     res.status(400).json({ error: 'Invalid account settings' });
@@ -70,8 +88,13 @@ function scheduleAnalysis() {
     if (hours === 9 && minutes === 30 && day >= 1 && day <= 5) {
       console.log('Running scheduled analysis...');
       try {
-        latestAnalysis = await runAnalysis('london-open', defaultAccountSettings);
-        console.log('Scheduled analysis completed');
+        // Run analysis for all currency pairs
+        const pairs = ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD', 'GBP/JPY', 'USD/ZAR', 'EUR/GBP'];
+        for (const pair of pairs) {
+          const analysis = await runAnalysis(pair, 'london-open', defaultAccountSettings);
+          analysisCache[pair] = analysis;
+          console.log(`Completed analysis for ${pair}`);
+        }
       } catch (error) {
         console.error('Scheduled analysis error:', error);
       }
@@ -83,7 +106,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Analysis scheduled for 9:30 AM Israel time on weekdays');
   
-  // Start the simple scheduler
+  // Start the scheduler
   scheduleAnalysis();
   
   // Show current time for debugging

@@ -1,47 +1,45 @@
-function calculatePosition(accountBalanceGBP, monthlyTargetGBP, currentPrice) {
-  const tradingDaysPerMonth = 20;
-  const dailyTargetGBP = monthlyTargetGBP / tradingDaysPerMonth;
+const { getPipValue } = require('./priceDataService');
+
+function calculatePosition(accountBalanceGBP, targetProfitGBP, currentPrice, currencyPair) {
+  const [baseCurrency, quoteCurrency] = currencyPair.split('/');
   const riskPerTradeGBP = accountBalanceGBP * 0.02; // 2% risk per trade
+  
+  // Get pip value for this currency pair
+  const pipValuePerLot = getPipValue(baseCurrency, quoteCurrency, currentPrice);
   
   // Calculate position size based on risk
   const stopLossPips = 10; // Conservative 10 pip stop loss
-  const pipValuePerLot = calculatePipValue(currentPrice);
   const lotSize = riskPerTradeGBP / (stopLossPips * pipValuePerLot);
   
-  // Calculate required pips for daily target
-  const requiredPips = Math.ceil(dailyTargetGBP / (lotSize * pipValuePerLot));
+  // Calculate required pips for target profit (£50)
+  const requiredPips = Math.ceil(targetProfitGBP / (lotSize * pipValuePerLot));
   
   return {
     accountBalance: accountBalanceGBP,
-    monthlyTarget: monthlyTargetGBP,
-    dailyTarget: dailyTargetGBP,
+    targetProfit: targetProfitGBP,
     riskPerTrade: riskPerTradeGBP,
     recommendedLotSize: Math.round(lotSize * 100) / 100,
     stopLossPips: stopLossPips,
     takeProfitPips: requiredPips,
     requiredPips: requiredPips,
     pipValue: pipValuePerLot,
-    maxRiskPercent: 2
+    maxRiskPercent: 2,
+    currencyPair: currencyPair,
+    projectedProfit: requiredPips * lotSize * pipValuePerLot,
+    riskRewardRatio: requiredPips / stopLossPips
   };
 }
 
-function calculatePipValue(currentPrice) {
-  // For EUR/USD, 1 pip = $10 per standard lot
-  // Convert to GBP (approximate rate)
-  const usdToGbp = 0.78;
-  return 10 * usdToGbp;
-}
-
-function validateTarget(accountBalance, monthlyTarget) {
-  const monthlyReturnPercent = (monthlyTarget / accountBalance) * 100;
+function validateTarget(accountBalance, targetProfit) {
+  const profitPercent = (targetProfit / accountBalance) * 100;
   
   return {
-    isRealistic: monthlyReturnPercent <= 20,
-    monthlyReturnPercent: monthlyReturnPercent,
-    warning: monthlyReturnPercent > 20 ? 
-      `Warning: ${monthlyReturnPercent.toFixed(1)}% monthly return is extremely high risk` : null,
-    recommendation: monthlyReturnPercent > 20 ?
-      `Recommended target: £${(accountBalance * 0.1).toFixed(2)} (10% monthly)` : null
+    isRealistic: profitPercent <= 10, // £50 on £1000 = 5%, which is realistic
+    profitPercent: profitPercent,
+    warning: profitPercent > 10 ? 
+      `Warning: ${profitPercent.toFixed(1)}% profit per trade is high risk` : null,
+    recommendation: profitPercent > 10 ?
+      `Recommended target: £${(accountBalance * 0.05).toFixed(2)} (5% per trade)` : null
   };
 }
 

@@ -1,7 +1,6 @@
 const axios = require('axios');
 require('dotenv').config();
 
-// Sign up for free at https://twelvedata.com/
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY || 'demo';
 
 async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15min') {
@@ -78,4 +77,30 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD') {
   }
 }
 
-module.exports = { getForexData };
+// New function to get pip value for different pairs
+function getPipValue(fromSymbol, toSymbol, currentPrice) {
+  // For most pairs, 1 pip = 0.0001
+  // For JPY pairs, 1 pip = 0.01
+  const isJPYPair = toSymbol === 'JPY' || fromSymbol === 'JPY';
+  const pipSize = isJPYPair ? 0.01 : 0.0001;
+  
+  // Standard lot size = 100,000 units
+  // Calculate pip value in account currency (GBP)
+  if (toSymbol === 'GBP') {
+    // Direct GBP quote
+    return 100000 * pipSize;
+  } else if (fromSymbol === 'GBP') {
+    // GBP is base currency
+    return 100000 * pipSize / currentPrice;
+  } else {
+    // Need to convert to GBP
+    // Simplified calculation - in production, you'd need current exchange rates
+    const estimatedGBPRate = 0.78; // USD to GBP approximation
+    return 100000 * pipSize * estimatedGBPRate;
+  }
+}
+
+module.exports = { 
+  getForexData,
+  getPipValue
+};

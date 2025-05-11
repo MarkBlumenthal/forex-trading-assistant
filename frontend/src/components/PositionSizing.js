@@ -5,7 +5,7 @@ const PositionSizing = ({ positionData, decision }) => {
 
   return (
     <div className="position-sizing">
-      <h3>Position Sizing & Trade Setup</h3>
+      <h3>Position Sizing & Trade Setup for {positionData.currencyPair}</h3>
       <div className="position-grid">
         <div className="position-card">
           <h4>Account Info</h4>
@@ -14,9 +14,10 @@ const PositionSizing = ({ positionData, decision }) => {
         </div>
         
         <div className="position-card">
-          <h4>Daily Targets</h4>
-          <p>Daily target: £{positionData.dailyTarget.toFixed(2)}</p>
+          <h4>Trade Targets</h4>
+          <p>Target profit: £{positionData.targetProfit.toFixed(2)}</p>
           <p>Required pips: {positionData.requiredPips}</p>
+          <p>Projected profit: £{positionData.projectedProfit.toFixed(2)}</p>
         </div>
         
         <div className="position-card">
@@ -29,15 +30,15 @@ const PositionSizing = ({ positionData, decision }) => {
         <div className="position-card">
           <h4>Risk/Reward</h4>
           <p>Risk: £{positionData.riskPerTrade.toFixed(2)}</p>
-          <p>Potential profit: £{(positionData.takeProfitPips * positionData.pipValue * positionData.recommendedLotSize).toFixed(2)}</p>
-          <p>R:R Ratio: 1:{(positionData.takeProfitPips / positionData.stopLossPips).toFixed(1)}</p>
+          <p>Reward: £{positionData.targetProfit.toFixed(2)}</p>
+          <p>R:R Ratio: 1:{positionData.riskRewardRatio.toFixed(1)}</p>
         </div>
       </div>
       
       <div className="mt4-instructions">
         <h4>MT4 Setup Instructions:</h4>
         <ol>
-          <li>Open EUR/USD chart in MT4</li>
+          <li>Open {positionData.currencyPair} chart in MT4</li>
           <li>Set order type: Market Order</li>
           <li>Volume: {positionData.recommendedLotSize} lots</li>
           <li>Stop Loss: {positionData.stopLossPips} pips from entry</li>

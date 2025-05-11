@@ -50,6 +50,34 @@ main {
   color: #d32f2f;
 }
 
+/* Currency Selector */
+.currency-selector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.currency-selector button {
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.currency-selector button:hover {
+  background-color: #d0d0d0;
+}
+
+.currency-selector button.active {
+  background-color: #1976d2;
+  color: white;
+}
+
 .controls {
   display: flex;
   gap: 10px;
@@ -81,6 +109,17 @@ button:disabled {
 .dashboard {
   display: grid;
   gap: 20px;
+}
+
+/* Currency Pair Header */
+.currency-pair-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.currency-pair-header h2 {
+  color: #1976d2;
+  font-size: 28px;
 }
 
 .decision-panel {
@@ -266,14 +305,20 @@ button:disabled {
   font-weight: bold;
 }
 
+/* Updated sentiment colors for all currencies */
 .sentiment.BULLISH,
-.sentiment.EUR_POSITIVE { 
+.sentiment.EUR_POSITIVE,
+.sentiment.GBP_POSITIVE,
+.sentiment.AUD_POSITIVE,
+.sentiment.NZD_POSITIVE,
+.sentiment.JPY_POSITIVE,
+.sentiment.ZAR_POSITIVE { 
   color: #2e7d32; 
 }
 
 .sentiment.BEARISH,
-.sentiment.USD_POSITIVE { 
-  color: #c62828; 
+.sentiment.USD_POSITIVE {
+  color: #c62828;
 }
 
 .sentiment.NEUTRAL { 
@@ -453,6 +498,14 @@ button:disabled {
   }
   
   .controls button {
+    width: 100%;
+  }
+  
+  .currency-selector {
+    flex-direction: column;
+  }
+  
+  .currency-selector button {
     width: 100%;
   }
   

@@ -10,7 +10,7 @@ import {
   ReferenceLine
 } from 'recharts';
 
-const PriceChart = ({ data }) => {
+const PriceChart = ({ data, currencyPair = 'EUR/USD' }) => {
   if (!data || data.length === 0) return <div>No price data available</div>;
 
   // Format data for chart
@@ -32,6 +32,10 @@ const PriceChart = ({ data }) => {
   const yMin = minPrice - priceRange * 0.1;
   const yMax = maxPrice + priceRange * 0.1;
 
+  // Determine decimal places based on currency pair
+  const isJPYPair = currencyPair.includes('JPY');
+  const decimalPlaces = isJPYPair ? 3 : 5;
+
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -43,9 +47,9 @@ const PriceChart = ({ data }) => {
           borderRadius: '4px'
         }}>
           <p>{`Time: ${label}`}</p>
-          <p style={{ color: '#1976d2' }}>{`Price: ${payload[0].value.toFixed(5)}`}</p>
-          {payload[1] && <p style={{ color: '#2e7d32' }}>{`High: ${payload[1].value.toFixed(5)}`}</p>}
-          {payload[2] && <p style={{ color: '#c62828' }}>{`Low: ${payload[2].value.toFixed(5)}`}</p>}
+          <p style={{ color: '#1976d2' }}>{`Price: ${payload[0].value.toFixed(decimalPlaces)}`}</p>
+          {payload[1] && <p style={{ color: '#2e7d32' }}>{`High: ${payload[1].value.toFixed(decimalPlaces)}`}</p>}
+          {payload[2] && <p style={{ color: '#c62828' }}>{`Low: ${payload[2].value.toFixed(decimalPlaces)}`}</p>}
         </div>
       );
     }
@@ -54,7 +58,7 @@ const PriceChart = ({ data }) => {
 
   return (
     <div className="analysis-section">
-      <h3>EUR/USD Price Chart (15-minute)</h3>
+      <h3>{currencyPair} Price Chart (15-minute)</h3>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart
           data={chartData}
@@ -69,7 +73,7 @@ const PriceChart = ({ data }) => {
           />
           <YAxis 
             domain={[yMin, yMax]}
-            tickFormatter={(value) => value.toFixed(5)}
+            tickFormatter={(value) => value.toFixed(decimalPlaces)}
           />
           <Tooltip content={<CustomTooltip />} />
           

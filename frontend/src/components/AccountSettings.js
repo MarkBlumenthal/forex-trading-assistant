@@ -8,7 +8,7 @@ const AccountSettings = ({ settings, onUpdate }) => {
     e.preventDefault();
     onUpdate({
       accountBalance: parseFloat(formData.accountBalance),
-      monthlyTarget: parseFloat(formData.monthlyTarget)
+      targetProfit: parseFloat(formData.targetProfit)
     });
     setIsEditing(false);
   };
@@ -19,7 +19,7 @@ const AccountSettings = ({ settings, onUpdate }) => {
         <h3>Account Settings</h3>
         <div className="settings-display">
           <p>Account Balance: £{settings.accountBalance}</p>
-          <p>Monthly Target: £{settings.monthlyTarget}</p>
+          <p>Target Profit per Trade: £{settings.targetProfit}</p>
           <button onClick={() => setIsEditing(true)}>Edit Settings</button>
         </div>
       </div>
@@ -40,11 +40,11 @@ const AccountSettings = ({ settings, onUpdate }) => {
           />
         </div>
         <div>
-          <label>Monthly Target (£):</label>
+          <label>Target Profit per Trade (£):</label>
           <input
             type="number"
-            value={formData.monthlyTarget}
-            onChange={(e) => setFormData({ ...formData, monthlyTarget: e.target.value })}
+            value={formData.targetProfit}
+            onChange={(e) => setFormData({ ...formData, targetProfit: e.target.value })}
             required
           />
         </div>

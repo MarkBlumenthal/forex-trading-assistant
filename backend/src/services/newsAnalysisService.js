@@ -2,27 +2,41 @@ const axios = require('axios');
 const Parser = require('rss-parser');
 const parser = new Parser();
 
-async function getMarketNews() {
+// Currency keywords for news filtering
+const CURRENCY_KEYWORDS = {
+  EUR: ['eur', 'euro', 'ecb', 'eurozone', 'european central bank', 'eu economy'],
+  USD: ['usd', 'dollar', 'fed', 'federal reserve', 'fomc', 'us economy', 'greenback'],
+  GBP: ['gbp', 'pound', 'sterling', 'boe', 'bank of england', 'uk economy', 'brexit'],
+  AUD: ['aud', 'aussie', 'australian dollar', 'rba', 'reserve bank of australia', 'australia economy'],
+  NZD: ['nzd', 'kiwi', 'new zealand dollar', 'rbnz', 'reserve bank of new zealand', 'nz economy'],
+  JPY: ['jpy', 'yen', 'boj', 'bank of japan', 'japan economy', 'japanese yen'],
+  ZAR: ['zar', 'rand', 'south african rand', 'sarb', 'south africa economy', 'sa economy']
+};
+
+async function getMarketNews(currencyPair = 'EUR/USD') {
   try {
-    const news = await getFinancialNews();
-    const sentiment = analyzeNewsSentiment(news);
+    const [baseCurrency, quoteCurrency] = currencyPair.split('/');
+    const news = await getFinancialNews(baseCurrency, quoteCurrency);
+    const sentiment = analyzeNewsSentiment(news, baseCurrency, quoteCurrency);
     
     return {
       articles: news,
       sentiment,
-      keyEvents: extractKeyEvents(news)
+      keyEvents: extractKeyEvents(news),
+      currencyPair
     };
   } catch (error) {
     console.error('Error fetching news:', error.message);
     return {
       articles: [],
       sentiment: 'NEUTRAL',
-      keyEvents: []
+      keyEvents: [],
+      currencyPair
     };
   }
 }
 
-async function getFinancialNews() {
+async function getFinancialNews(baseCurrency, quoteCurrency) {
   try {
     const newsArticles = [];
     
@@ -47,10 +61,15 @@ async function getFinancialNews() {
           .slice(0, 5) // Get latest 5 from each feed
           .filter(item => {
             const text = (item.title + ' ' + (item.contentSnippet || item.content || '')).toLowerCase();
-            return text.includes('eur') || text.includes('usd') || 
-                   text.includes('euro') || text.includes('dollar') ||
-                   text.includes('ecb') || text.includes('fed') ||
-                   text.includes('forex') || text.includes('fx');
+            
+            // Check if article mentions either currency
+            const baseKeywords = CURRENCY_KEYWORDS[baseCurrency] || [];
+            const quoteKeywords = CURRENCY_KEYWORDS[quoteCurrency] || [];
+            
+            const mentionsBase = baseKeywords.some(keyword => text.includes(keyword));
+            const mentionsQuote = quoteKeywords.some(keyword => text.includes(keyword));
+            
+            return mentionsBase || mentionsQuote || text.includes('forex') || text.includes('fx');
           })
           .map(item => ({
             title: item.title,
@@ -72,7 +91,7 @@ async function getFinancialNews() {
       .slice(0, 20) // Keep top 20 most recent
       .map(article => ({
         ...article,
-        sentiment: analyzeSingleArticle(article),
+        sentiment: analyzeSingleArticle(article, baseCurrency, quoteCurrency),
         impact: determineImpact(article)
       }));
     
@@ -82,39 +101,49 @@ async function getFinancialNews() {
   }
 }
 
-function analyzeSingleArticle(article) {
+function analyzeSingleArticle(article, baseCurrency, quoteCurrency) {
   const text = (article.title + ' ' + article.description).toLowerCase();
   
-  // Enhanced keyword analysis
-  const eurPositive = ['ecb hawkish', 'eurozone recovery', 'euro strength', 'euro gains', 
-                       'euro rises', 'eur bullish', 'eurozone growth', 'ecb rate hike',
-                       'euro rally', 'eur/usd up', 'euro advance', 'eurozone improvement'];
-  const eurNegative = ['ecb dovish', 'eurozone weakness', 'euro falls', 'euro pressure',
-                       'euro drops', 'eur bearish', 'eurozone recession', 'ecb rate cut',
-                       'euro decline', 'eur/usd down', 'euro retreat', 'eurozone slowdown'];
-  const usdPositive = ['fed hawkish', 'dollar strength', 'usd gains', 'strong us data',
-                       'dollar rises', 'usd bullish', 'fed rate hike', 'us growth',
-                       'dollar rally', 'greenback advance', 'usd advance', 'us economy strong'];
-  const usdNegative = ['fed dovish', 'dollar weakness', 'usd falls', 'weak us data',
-                       'dollar drops', 'usd bearish', 'fed rate cut', 'us recession',
-                       'dollar decline', 'greenback retreat', 'usd retreat', 'us slowdown'];
+  // Dynamic sentiment analysis based on currency pair
+  const basePositive = [
+    `${baseCurrency.toLowerCase()} strength`, 
+    `${baseCurrency.toLowerCase()} gains`, 
+    `${baseCurrency.toLowerCase()} rally`,
+    `${baseCurrency.toLowerCase()} rises`,
+    `${baseCurrency.toLowerCase()} advance`
+  ];
+  const baseNegative = [
+    `${baseCurrency.toLowerCase()} weakness`, 
+    `${baseCurrency.toLowerCase()} falls`, 
+    `${baseCurrency.toLowerCase()} decline`,
+    `${baseCurrency.toLowerCase()} drops`,
+    `${baseCurrency.toLowerCase()} retreat`
+  ];
+  const quotePositive = [
+    `${quoteCurrency.toLowerCase()} strength`, 
+    `${quoteCurrency.toLowerCase()} gains`, 
+    `${quoteCurrency.toLowerCase()} rally`,
+    `${quoteCurrency.toLowerCase()} rises`,
+    `${quoteCurrency.toLowerCase()} advance`
+  ];
+  const quoteNegative = [
+    `${quoteCurrency.toLowerCase()} weakness`, 
+    `${quoteCurrency.toLowerCase()} falls`, 
+    `${quoteCurrency.toLowerCase()} decline`,
+    `${quoteCurrency.toLowerCase()} drops`,
+    `${quoteCurrency.toLowerCase()} retreat`
+  ];
   
-  let eurScore = 0;
-  let usdScore = 0;
+  let baseScore = 0;
+  let quoteScore = 0;
   
-  eurPositive.forEach(keyword => { if (text.includes(keyword)) eurScore += 2; });
-  eurNegative.forEach(keyword => { if (text.includes(keyword)) eurScore -= 2; });
-  usdPositive.forEach(keyword => { if (text.includes(keyword)) usdScore += 2; });
-  usdNegative.forEach(keyword => { if (text.includes(keyword)) usdScore -= 2; });
+  basePositive.forEach(keyword => { if (text.includes(keyword)) baseScore += 2; });
+  baseNegative.forEach(keyword => { if (text.includes(keyword)) baseScore -= 2; });
+  quotePositive.forEach(keyword => { if (text.includes(keyword)) quoteScore += 2; });
+  quoteNegative.forEach(keyword => { if (text.includes(keyword)) quoteScore -= 2; });
   
-  // Additional general forex indicators
-  if (text.includes('eur/usd')) {
-    if (text.includes('buy') || text.includes('long')) eurScore += 1;
-    if (text.includes('sell') || text.includes('short')) eurScore -= 1;
-  }
-  
-  if (eurScore > usdScore) return 'EUR_POSITIVE';
-  if (usdScore > eurScore) return 'USD_POSITIVE';
+  if (baseScore > quoteScore) return `${baseCurrency}_POSITIVE`;
+  if (quoteScore > baseScore) return `${quoteCurrency}_POSITIVE`;
   return 'NEUTRAL';
 }
 
@@ -123,7 +152,7 @@ function determineImpact(article) {
   
   const highImpact = ['central bank', 'interest rate', 'monetary policy', 'inflation data', 
                       'nfp', 'non-farm', 'gdp', 'crisis', 'emergency', 'breaking',
-                      'ecb decision', 'fed decision', 'fomc', 'policy meeting'];
+                      'rate decision', 'policy meeting'];
   
   const mediumImpact = ['economic data', 'manufacturing', 'pmi', 'consumer', 'retail',
                         'employment', 'trade', 'industrial', 'sentiment', 'confidence'];
@@ -139,18 +168,18 @@ function determineImpact(article) {
   return 'LOW';
 }
 
-function analyzeNewsSentiment(articles) {
-  let eurScore = 0;
-  let usdScore = 0;
+function analyzeNewsSentiment(articles, baseCurrency, quoteCurrency) {
+  let baseScore = 0;
+  let quoteScore = 0;
 
   articles.forEach(article => {
     const weight = article.impact === 'HIGH' ? 3 : article.impact === 'MEDIUM' ? 2 : 1;
     
-    if (article.sentiment === 'EUR_POSITIVE') eurScore += weight;
-    if (article.sentiment === 'USD_POSITIVE') usdScore += weight;
+    if (article.sentiment === `${baseCurrency}_POSITIVE`) baseScore += weight;
+    if (article.sentiment === `${quoteCurrency}_POSITIVE`) quoteScore += weight;
   });
 
-  const netScore = eurScore - usdScore;
+  const netScore = baseScore - quoteScore;
   
   if (netScore > 3) return 'BULLISH';
   if (netScore < -3) return 'BEARISH';

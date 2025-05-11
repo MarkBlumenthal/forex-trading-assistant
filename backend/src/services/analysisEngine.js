@@ -4,22 +4,24 @@ const { getMarketNews } = require('./newsAnalysisService');
 const { getEconomicCalendar } = require('./economicCalendarService');
 const { calculatePosition, validateTarget } = require('./positionCalculator');
 
-async function runAnalysis(timeframe = 'current', accountSettings = null) {
-  console.log(`Starting comprehensive analysis for ${timeframe}...`);
+async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', accountSettings = null) {
+  console.log(`Starting comprehensive analysis for ${currencyPair} at ${timeframe}...`);
+  
+  const [baseCurrency, quoteCurrency] = currencyPair.split('/');
   
   try {
     // 1. Get price data
-    console.log('Fetching price data...');
-    const priceData = await getForexData('EUR', 'USD', '15min');
+    console.log(`Fetching ${currencyPair} price data...`);
+    const priceData = await getForexData(baseCurrency, quoteCurrency, '15min');
     
     // 2. Calculate technical indicators
     console.log('Calculating technical indicators...');
     const indicators = calculateIndicators(priceData);
     const technicalAnalysis = analyzeIndicators(indicators);
     
-    // 3. Get news analysis
-    console.log('Analyzing news...');
-    const newsAnalysis = await getMarketNews();
+    // 3. Get news analysis for this currency pair
+    console.log(`Analyzing news for ${currencyPair}...`);
+    const newsAnalysis = await getMarketNews(currencyPair);
     
     // 4. Check economic calendar
     console.log('Checking economic calendar...');
@@ -35,18 +37,20 @@ async function runAnalysis(timeframe = 'current', accountSettings = null) {
     if (accountSettings) {
       positionSizing = calculatePosition(
         accountSettings.accountBalance,
-        accountSettings.monthlyTarget,
-        indicators.currentPrice
+        accountSettings.targetProfit, // Now £50 per trade
+        indicators.currentPrice,
+        currencyPair
       );
       
       targetValidation = validateTarget(
         accountSettings.accountBalance,
-        accountSettings.monthlyTarget
+        accountSettings.targetProfit
       );
     }
     
     const analysisResult = {
       timestamp: new Date().toISOString(),
+      currencyPair: currencyPair,
       timeframe: timeframe,
       decision: decision.action,
       confidence: decision.confidence,
@@ -117,13 +121,13 @@ function makeDecision(technical, news, economic) {
     decision.action = 'TRADE';
     decision.direction = 'BUY';
     decision.reasoning.push(`Technical indicators bullish (${technical.bullishSignals} vs ${technical.bearishSignals})`);
-    if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports EUR strength');
+    if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports buying');
     decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
   } else if (combinedScore < -0.3 && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'SELL';
     decision.reasoning.push(`Technical indicators bearish (${technical.bearishSignals} vs ${technical.bullishSignals})`);
-    if (news.sentiment === 'BEARISH') decision.reasoning.push('News sentiment supports USD strength');
+    if (news.sentiment === 'BEARISH') decision.reasoning.push('News sentiment supports selling');
     decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
   } else {
     decision.action = 'WAIT';

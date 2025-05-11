@@ -33,6 +33,11 @@ const Dashboard = ({ analysis }) => {
         </div>
       )}
 
+      {/* Currency Pair Header */}
+      <div className="currency-pair-header">
+        <h2>{analysis.currencyPair} Analysis</h2>
+      </div>
+
       {/* Main Decision Panel */}
       <div className="decision-panel">
         <h2>Trading Decision</h2>
@@ -89,7 +94,7 @@ const Dashboard = ({ analysis }) => {
 
       {/* Price Chart */}
       <div className="chart-container">
-        <PriceChart data={analysis.priceData} />
+        <PriceChart data={analysis.priceData} currencyPair={analysis.currencyPair} />
       </div>
 
       {/* Analysis Grid */}
