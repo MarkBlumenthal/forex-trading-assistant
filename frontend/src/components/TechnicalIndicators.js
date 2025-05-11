@@ -38,34 +38,68 @@ const TechnicalIndicators = ({ technical }) => {
           </div>
           
           <div className="indicator-card">
-            <h4>SMA 20</h4>
-            <div className="value">{formatValue(indicators.sma20)}</div>
-          </div>
-          
-          <div className="indicator-card">
-            <h4>SMA 50</h4>
-            <div className="value">{formatValue(indicators.sma50)}</div>
-          </div>
-          
-          <div className="indicator-card">
             <h4>ATR (14)</h4>
             <div className="value">{formatValue(indicators.atr)}</div>
           </div>
+          
+          <div className="indicator-card">
+            <h4>ADX</h4>
+            <div className="value">{formatValue(indicators.adx?.adx)}</div>
+          </div>
+          
+          <div className="indicator-card">
+            <h4>CCI</h4>
+            <div className="value">{formatValue(indicators.cci)}</div>
+          </div>
+          
+          <div className="indicator-card">
+            <h4>Williams %R</h4>
+            <div className="value">{formatValue(indicators.williamsR)}</div>
+          </div>
+          
+          <div className="indicator-card">
+            <h4>MFI</h4>
+            <div className="value">{formatValue(indicators.mfi)}</div>
+          </div>
         </div>
 
-        <div style={{ marginTop: '20px' }}>
+        <div className="indicator-section">
+          <h4>Moving Averages</h4>
+          <div className="indicator-details">
+            SMA 20: {formatValue(indicators.sma20)}<br />
+            SMA 50: {formatValue(indicators.sma50)}<br />
+            SMA 200: {formatValue(indicators.sma200)}<br />
+            EMA 9: {formatValue(indicators.ema9)}<br />
+            EMA 21: {formatValue(indicators.ema21)}
+          </div>
+        </div>
+
+        <div className="indicator-section">
           <h4>MACD</h4>
-          <p>{formatValue(indicators.macd)}</p>
+          <div className="indicator-details">
+            {formatValue(indicators.macd)}
+          </div>
         </div>
 
-        <div style={{ marginTop: '20px' }}>
+        <div className="indicator-section">
           <h4>Bollinger Bands</h4>
-          <p>{formatValue(indicators.bollingerBands)}</p>
+          <div className="indicator-details">
+            {formatValue(indicators.bollingerBands)}
+          </div>
         </div>
 
-        <div style={{ marginTop: '20px' }}>
+        <div className="indicator-section">
           <h4>Stochastic</h4>
-          <p>{formatValue(indicators.stochastic)}</p>
+          <div className="indicator-details">
+            {formatValue(indicators.stochastic)}
+          </div>
+        </div>
+
+        <div className="indicator-section">
+          <h4>Parabolic SAR</h4>
+          <div className="indicator-details">
+            {formatValue(indicators.psar)}
+          </div>
         </div>
       </div>
 

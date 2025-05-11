@@ -2,9 +2,10 @@ const { getForexData } = require('./priceDataService');
 const { calculateIndicators, analyzeIndicators } = require('./technicalAnalysisService');
 const { getMarketNews } = require('./newsAnalysisService');
 const { getEconomicCalendar } = require('./economicCalendarService');
+const { calculatePosition, validateTarget } = require('./positionCalculator');
 
-async function runAnalysis() {
-  console.log('Starting comprehensive analysis...');
+async function runAnalysis(timeframe = 'current', accountSettings = null) {
+  console.log(`Starting comprehensive analysis for ${timeframe}...`);
   
   try {
     // 1. Get price data
@@ -27,8 +28,26 @@ async function runAnalysis() {
     // 5. Make final decision
     const decision = makeDecision(technicalAnalysis, newsAnalysis, economicCalendar);
     
+    // 6. Calculate position sizing if account settings provided
+    let positionSizing = null;
+    let targetValidation = null;
+    
+    if (accountSettings) {
+      positionSizing = calculatePosition(
+        accountSettings.accountBalance,
+        accountSettings.monthlyTarget,
+        indicators.currentPrice
+      );
+      
+      targetValidation = validateTarget(
+        accountSettings.accountBalance,
+        accountSettings.monthlyTarget
+      );
+    }
+    
     const analysisResult = {
       timestamp: new Date().toISOString(),
+      timeframe: timeframe,
       decision: decision.action,
       confidence: decision.confidence,
       direction: decision.direction,
@@ -40,7 +59,9 @@ async function runAnalysis() {
       },
       news: newsAnalysis,
       economic: economicCalendar,
-      priceData: priceData.slice(-20) // Last 20 candles for chart
+      priceData: priceData.slice(-20), // Last 20 candles for chart
+      positionSizing: positionSizing,
+      targetValidation: targetValidation
     };
     
     console.log('Analysis completed');
@@ -91,14 +112,14 @@ function makeDecision(technical, news, economic) {
   const baseConfidence = technical.confidence || 50;
   decision.confidence = Math.min(85, baseConfidence + alignmentBonus);
 
-  // Make decision based on combined score - NOW WITH 80% THRESHOLD
-  if (combinedScore > 0.3 && decision.confidence >= 80) {  // Changed from > 60 to >= 80
+  // Make decision based on combined score
+  if (combinedScore > 0.3 && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'BUY';
     decision.reasoning.push(`Technical indicators bullish (${technical.bullishSignals} vs ${technical.bearishSignals})`);
     if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports EUR strength');
     decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
-  } else if (combinedScore < -0.3 && decision.confidence >= 80) {  // Changed from > 60 to >= 80
+  } else if (combinedScore < -0.3 && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'SELL';
     decision.reasoning.push(`Technical indicators bearish (${technical.bearishSignals} vs ${technical.bullishSignals})`);
@@ -122,11 +143,6 @@ function makeDecision(technical, news, economic) {
     decision.risks.push('Technical and fundamental analysis conflict');
   }
   
-  // Additional risk warning for sub-80% confidence trades
-  if (decision.action === 'TRADE' && decision.confidence < 85) {
-    decision.risks.push('Trading at minimum confidence threshold - use smaller position size');
-  }
-
   return decision;
 }
 

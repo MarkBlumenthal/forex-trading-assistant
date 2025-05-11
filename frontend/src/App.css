@@ -55,6 +55,7 @@ main {
   gap: 10px;
   justify-content: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 button {
@@ -195,6 +196,26 @@ button:disabled {
   color: #333;
 }
 
+/* Enhanced indicator display for new indicators */
+.indicator-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.indicator-section h4 {
+  color: #1976d2;
+  margin-bottom: 10px;
+}
+
+.indicator-details {
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
 .signal-list {
   list-style: none;
   padding: 0;
@@ -209,7 +230,7 @@ button:disabled {
 }
 
 .news-list {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -238,15 +259,26 @@ button:disabled {
   gap: 10px;
   font-size: 11px;
   color: #999;
+  align-items: center;
 }
 
 .sentiment {
   font-weight: bold;
 }
 
-.sentiment.BULLISH { color: #2e7d32; }
-.sentiment.BEARISH { color: #c62828; }
-.sentiment.NEUTRAL { color: #666; }
+.sentiment.BULLISH,
+.sentiment.EUR_POSITIVE { 
+  color: #2e7d32; 
+}
+
+.sentiment.BEARISH,
+.sentiment.USD_POSITIVE { 
+  color: #c62828; 
+}
+
+.sentiment.NEUTRAL { 
+  color: #666; 
+}
 
 .event-list {
   list-style: none;
@@ -296,6 +328,113 @@ button:disabled {
   color: #2e7d32;
 }
 
+/* Position Sizing Styles */
+.position-sizing {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.position-card {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.position-card h4 {
+  margin: 0 0 10px 0;
+  color: #1976d2;
+}
+
+.position-card p {
+  margin: 5px 0;
+}
+
+.mt4-instructions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.mt4-instructions ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.mt4-instructions li {
+  margin: 5px 0;
+}
+
+/* Account Settings Styles */
+.account-settings {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.settings-display p {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.settings-form {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.settings-form > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.settings-form label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.settings-form input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Warning Banner */
+.warning-banner {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.warning-banner strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
   .analysis-grid {
     grid-template-columns: 1fr;
@@ -303,5 +442,26 @@ button:disabled {
   
   .indicators-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .position-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls {
+    flex-direction: column;
+  }
+  
+  .controls button {
+    width: 100%;
+  }
+  
+  .settings-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-buttons {
+    justify-content: center;
   }
 }

@@ -4,6 +4,7 @@ import PriceChart from './PriceChart';
 import TechnicalIndicators from './TechnicalIndicators';
 import NewsSection from './NewsSection';
 import EconomicCalendar from './EconomicCalendar';
+import PositionSizing from './PositionSizing';
 
 const Dashboard = ({ analysis }) => {
   if (!analysis) return null;
@@ -24,6 +25,14 @@ const Dashboard = ({ analysis }) => {
 
   return (
     <div className="dashboard">
+      {/* Target Validation Warning */}
+      {analysis.targetValidation && !analysis.targetValidation.isRealistic && (
+        <div className="warning-banner">
+          <strong>⚠️ {analysis.targetValidation.warning}</strong>
+          <p>{analysis.targetValidation.recommendation}</p>
+        </div>
+      )}
+
       {/* Main Decision Panel */}
       <div className="decision-panel">
         <h2>Trading Decision</h2>
@@ -45,13 +54,8 @@ const Dashboard = ({ analysis }) => {
               textColor="#000"
               formatTextValue={() => `${analysis.confidence}%`}
             />
-            <p>Confidence Level</p>
+            <p>Confidence Level (80% minimum required)</p>
           </div>
-
-        
-<p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-  Minimum threshold: 80% | Current: {analysis.confidence}%
-</p>
 
           <div className="reasoning">
             <h3>Reasoning</h3>
@@ -74,6 +78,14 @@ const Dashboard = ({ analysis }) => {
           )}
         </div>
       </div>
+
+      {/* Position Sizing */}
+      {analysis.positionSizing && (
+        <PositionSizing 
+          positionData={analysis.positionSizing}
+          decision={analysis.decision}
+        />
+      )}
 
       {/* Price Chart */}
       <div className="chart-container">
