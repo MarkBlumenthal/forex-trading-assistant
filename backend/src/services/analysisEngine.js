@@ -46,7 +46,7 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       
       targetValidation = validateTarget(
         accountSettings.accountBalance,
-        accountSettings.targetProfit
+        positionSizing.projectedProfit // Use calculated profit based on 3:1 ratio
       );
     }
     
@@ -60,8 +60,8 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       reasoning: decision.reasoning,
       risks: decision.risks,
       technical: {
-        indicators: technicalAnalysis.timeframes.fifteenMin.indicators,  // For backward compatibility
-        analysis: technicalAnalysis.timeframes.fifteenMin,  // For backward compatibility
+        indicators: technicalAnalysis.timeframes.fifteenMin.indicators,
+        analysis: technicalAnalysis.timeframes.fifteenMin,
         multiTimeframe: {
           daily: technicalAnalysis.timeframes.daily,
           fourHour: technicalAnalysis.timeframes.fourHour,
@@ -106,45 +106,58 @@ function makeDecision(technical, news, economic) {
 
   // Get overall technical direction and confidence from multi-timeframe analysis
   const technicalDirection = technical.overallDirection;
+  
+  // MODIFIED: Reduce minimum threshold for confidence to generate more signals
   const technicalConfidence = technical.confidence;
   
   // Calculate news score
   let newsScore = 0;
   if (news.sentiment === 'BULLISH') newsScore = 1;
   if (news.sentiment === 'BEARISH') newsScore = -1;
+  if (news.sentiment === 'NEUTRAL') newsScore = 0;
 
   // Determine if news aligns with technical
   const newsAligns = (
     (newsScore === 1 && technicalDirection === 'BUY') || 
-    (newsScore === -1 && technicalDirection === 'SELL')
+    (newsScore === -1 && technicalDirection === 'SELL') ||
+    (newsScore === 0) // CHANGED: Consider neutral news as non-conflicting
   );
   
   // Potential confidence boost from news alignment
   const newsBoost = newsAligns ? 5 : 0;
   
+  // MODIFIED: Boost the base confidence level to get more signals
+  const baseConfidence = technicalConfidence + 10;
+  
   // Final confidence calculation
-  decision.confidence = Math.min(85, technicalConfidence + newsBoost);
+  decision.confidence = Math.min(85, baseConfidence + newsBoost);
 
-  // Make decision based on direction and confidence
-  if (technicalDirection === 'BUY' && decision.confidence >= 80) {
+  // MODIFIED: Lower the threshold for trading to 70% from 80%
+  if (technicalDirection === 'BUY' && decision.confidence >= 70) {
     decision.action = 'TRADE';
     decision.direction = 'BUY';
-    decision.reasoning.push(`Multi-timeframe analysis shows strong bullish trend`);
+    decision.reasoning.push(`Multi-timeframe analysis shows bullish trend`);
     decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
     if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports buying');
-    decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
-  } else if (technicalDirection === 'SELL' && decision.confidence >= 80) {
+    decision.reasoning.push(`Confidence level: ${decision.confidence}%`);
+  } else if (technicalDirection === 'SELL' && decision.confidence >= 70) {
     decision.action = 'TRADE';
     decision.direction = 'SELL';
-    decision.reasoning.push(`Multi-timeframe analysis shows strong bearish trend`);
+    decision.reasoning.push(`Multi-timeframe analysis shows bearish trend`);
     decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
     if (news.sentiment === 'BEARISH') decision.reasoning.push('News sentiment supports selling');
-    decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
+    decision.reasoning.push(`Confidence level: ${decision.confidence}%`);
   } else {
     decision.action = 'WAIT';
-    decision.reasoning.push('Insufficient signal strength or alignment across timeframes');
-    if (technicalDirection === 'NEUTRAL') decision.reasoning.push('No clear trend direction');
-    if (decision.confidence < 80) decision.reasoning.push(`Confidence below 80% threshold (current: ${decision.confidence}%)`);
+    if (technicalDirection === 'NEUTRAL') {
+      decision.reasoning.push('No clear trend direction');
+    } else {
+      decision.reasoning.push(`Insufficient confidence for ${technicalDirection} signal`);
+    }
+    
+    if (decision.confidence < 70) {
+      decision.reasoning.push(`Confidence below 70% threshold (current: ${decision.confidence}%)`);
+    }
   }
 
   // Add risk warnings

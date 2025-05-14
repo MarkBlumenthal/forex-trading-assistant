@@ -295,30 +295,37 @@ function analyzeMultiTimeframe(multiTimeframeData) {
     fifteenMin: fifteenMinAnalysis.direction === 'BUY' ? 1 : fifteenMinAnalysis.direction === 'SELL' ? -1 : 0
   };
   
-  // Weight higher timeframes more heavily
+  // MODIFIED: Adjust weights to give more importance to shorter timeframes
+  // This will make the system more responsive to recent price action
   const weightedSum = 
-    (directions.daily * 4) + 
-    (directions.fourHour * 3) + 
-    (directions.oneHour * 2) + 
-    (directions.fifteenMin * 1);
+    (directions.daily * 3) +       // Was 4, now 3
+    (directions.fourHour * 3) +    // Same importance as daily
+    (directions.oneHour * 2) +     // Same as before
+    (directions.fifteenMin * 2);   // Was 1, now 2 (more importance)
   
+  // MODIFIED: Lower the threshold for direction determination
   let overallDirection = 'NEUTRAL';
-  if (weightedSum > 3) overallDirection = 'BUY';
-  else if (weightedSum < -3) overallDirection = 'SELL';
+  if (weightedSum >= 2) overallDirection = 'BUY';      // Was >3, now >=2
+  else if (weightedSum <= -2) overallDirection = 'SELL'; // Was <-3, now <=-2
   
   // Calculate alignment score (how well timeframes align)
   let alignmentScore = 0;
-  if (directions.daily === directions.fourHour) alignmentScore += 2;
-  if (directions.fourHour === directions.oneHour) alignmentScore += 2;
-  if (directions.oneHour === directions.fifteenMin) alignmentScore += 1;
-  if (directions.daily === directions.oneHour) alignmentScore += 1;
+  if (directions.daily === directions.fourHour && directions.daily !== 0) alignmentScore += 2;
+  if (directions.fourHour === directions.oneHour && directions.fourHour !== 0) alignmentScore += 2;
+  if (directions.oneHour === directions.fifteenMin && directions.oneHour !== 0) alignmentScore += 1;
+  
+  // MODIFIED: Give more weight to 1H and 15M alignment
+  if (directions.oneHour !== 0 && directions.oneHour === directions.fifteenMin) {
+    alignmentScore += 1; // Extra point for 1H and 15M alignment (now worth 2 points total)
+  }
   
   // Calculate confidence based on alignment and signal strength
+  // MODIFIED: Increase base confidence and weights for signal strength
   const confidence = Math.min(
     85, // Cap at 85%
-    40 + // Base confidence
+    45 + // Base confidence (was 40, now 45)
     (alignmentScore * 5) + // Add for alignment (max 25%)
-    (Math.abs(weightedSum) * 2) // Add for signal strength (max 20%)
+    (Math.abs(weightedSum) * 2.5) // Add for signal strength (was 2, now 2.5)
   );
   
   return {
