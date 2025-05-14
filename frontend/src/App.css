@@ -518,3 +518,57 @@ button:disabled {
     justify-content: center;
   }
 }
+
+/* Multi-timeframe analysis styles */
+.timeframe-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.timeframe-table th,
+.timeframe-table td {
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.timeframe-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.timeframe-insights {
+  margin-top: 20px;
+}
+
+.timeframe-insights h4 {
+  margin-bottom: 10px;
+  color: #1976d2;
+}
+
+.timeframe-insights ul {
+  list-style: none;
+  padding: 0;
+}
+
+.timeframe-insights li {
+  padding: 8px;
+  margin-bottom: 5px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.timeframe-insights li.warning {
+  background: #fff3e0;
+  border-left: 4px solid #f57c00;
+}
+
+.timeframe-insights li.strong {
+  background: #e8f5e9;
+  border-left: 4px solid #2e7d32;
+}
+
+.multi-timeframe-container {
+  grid-column: 1 / -1;
+}

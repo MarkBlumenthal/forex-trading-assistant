@@ -53,7 +53,7 @@ app.post('/api/analyze-now', async (req, res) => {
       accountSettings = defaultAccountSettings 
     } = req.body;
     
-    console.log(`Manual analysis triggered for ${currencyPair} at ${timeframe}`);
+    console.log(`Manual analysis triggered for ${currencyPair}`);
     const analysis = await runAnalysis(currencyPair, timeframe, accountSettings);
     analysisCache[currencyPair] = analysis;
     res.json(analysis);
@@ -91,7 +91,7 @@ function scheduleAnalysis() {
         // Run analysis for all currency pairs
         const pairs = ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD', 'GBP/JPY', 'USD/ZAR', 'EUR/GBP'];
         for (const pair of pairs) {
-          const analysis = await runAnalysis(pair, 'london-open', defaultAccountSettings);
+          const analysis = await runAnalysis(pair, 'current', defaultAccountSettings);
           analysisCache[pair] = analysis;
           console.log(`Completed analysis for ${pair}`);
         }

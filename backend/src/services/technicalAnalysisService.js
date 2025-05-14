@@ -280,7 +280,74 @@ function analyzeIndicators(indicators) {
   };
 }
 
+function analyzeMultiTimeframe(multiTimeframeData) {
+  // Analyze each timeframe
+  const dailyAnalysis = analyzeTimeframe(multiTimeframeData.daily);
+  const fourHourAnalysis = analyzeTimeframe(multiTimeframeData.fourHour);
+  const oneHourAnalysis = analyzeTimeframe(multiTimeframeData.oneHour);
+  const fifteenMinAnalysis = analyzeTimeframe(multiTimeframeData.fifteenMin);
+  
+  // Calculate overall direction based on weighted timeframe signals
+  const directions = {
+    daily: dailyAnalysis.direction === 'BUY' ? 1 : dailyAnalysis.direction === 'SELL' ? -1 : 0,
+    fourHour: fourHourAnalysis.direction === 'BUY' ? 1 : fourHourAnalysis.direction === 'SELL' ? -1 : 0,
+    oneHour: oneHourAnalysis.direction === 'BUY' ? 1 : oneHourAnalysis.direction === 'SELL' ? -1 : 0,
+    fifteenMin: fifteenMinAnalysis.direction === 'BUY' ? 1 : fifteenMinAnalysis.direction === 'SELL' ? -1 : 0
+  };
+  
+  // Weight higher timeframes more heavily
+  const weightedSum = 
+    (directions.daily * 4) + 
+    (directions.fourHour * 3) + 
+    (directions.oneHour * 2) + 
+    (directions.fifteenMin * 1);
+  
+  let overallDirection = 'NEUTRAL';
+  if (weightedSum > 3) overallDirection = 'BUY';
+  else if (weightedSum < -3) overallDirection = 'SELL';
+  
+  // Calculate alignment score (how well timeframes align)
+  let alignmentScore = 0;
+  if (directions.daily === directions.fourHour) alignmentScore += 2;
+  if (directions.fourHour === directions.oneHour) alignmentScore += 2;
+  if (directions.oneHour === directions.fifteenMin) alignmentScore += 1;
+  if (directions.daily === directions.oneHour) alignmentScore += 1;
+  
+  // Calculate confidence based on alignment and signal strength
+  const confidence = Math.min(
+    85, // Cap at 85%
+    40 + // Base confidence
+    (alignmentScore * 5) + // Add for alignment (max 25%)
+    (Math.abs(weightedSum) * 2) // Add for signal strength (max 20%)
+  );
+  
+  return {
+    overallDirection,
+    confidence,
+    alignmentScore,
+    weightedSum,
+    timeframes: {
+      daily: dailyAnalysis,
+      fourHour: fourHourAnalysis,
+      oneHour: oneHourAnalysis,
+      fifteenMin: fifteenMinAnalysis
+    }
+  };
+}
+
+// Helper function to analyze a single timeframe
+function analyzeTimeframe(priceData) {
+  const indicators = calculateIndicators(priceData);
+  const analysis = analyzeIndicators(indicators);
+  
+  return {
+    ...analysis,
+    indicators
+  };
+}
+
 module.exports = {
   calculateIndicators,
-  analyzeIndicators
+  analyzeIndicators,
+  analyzeMultiTimeframe
 };

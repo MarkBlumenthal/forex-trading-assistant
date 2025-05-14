@@ -13,7 +13,7 @@ function App() {
   const [selectedPair, setSelectedPair] = useState('EUR/USD');
   const [accountSettings, setAccountSettings] = useState({
     accountBalance: 1000,
-    targetProfit: 50  // Changed from monthlyTarget to targetProfit per trade
+    targetProfit: 50
   });
 
   useEffect(() => {
@@ -42,13 +42,13 @@ function App() {
     }
   };
 
-  const runAnalysisNow = async (timeframe = 'current') => {
+  const runAnalysisNow = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await axios.post('http://localhost:5000/api/analyze-now', {
         currencyPair: selectedPair,
-        timeframe,
+        timeframe: 'current',
         accountSettings
       });
       setAnalysis(response.data);
@@ -66,7 +66,7 @@ function App() {
       await axios.post('http://localhost:5000/api/account-settings', newSettings);
       setAccountSettings(newSettings);
       // Re-run analysis with new settings
-      await runAnalysisNow('current');
+      await runAnalysisNow();
     } catch (err) {
       console.error('Error updating settings:', err);
     }
@@ -110,14 +110,8 @@ function App() {
         </div>
         
         <div className="controls">
-          <button onClick={() => runAnalysisNow('current')} disabled={loading}>
+          <button onClick={runAnalysisNow} disabled={loading}>
             Analyze {selectedPair} Now
-          </button>
-          <button onClick={() => runAnalysisNow('london-open')} disabled={loading}>
-            London Open Analysis
-          </button>
-          <button onClick={() => runAnalysisNow('us-open')} disabled={loading}>
-            US Open Analysis
           </button>
           <button onClick={fetchAnalysis} disabled={loading}>
             Refresh

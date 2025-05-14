@@ -1,7 +1,9 @@
+// Update Dashboard.js to include the multi-timeframe component
 import React from 'react';
 import GaugeChart from 'react-gauge-chart';
 import PriceChart from './PriceChart';
 import TechnicalIndicators from './TechnicalIndicators';
+import MultiTimeframeAnalysis from './MultiTimeframeAnalysis'; // Import the new component
 import NewsSection from './NewsSection';
 import EconomicCalendar from './EconomicCalendar';
 import PositionSizing from './PositionSizing';
@@ -96,6 +98,13 @@ const Dashboard = ({ analysis }) => {
       <div className="chart-container">
         <PriceChart data={analysis.priceData} currencyPair={analysis.currencyPair} />
       </div>
+
+      {/* Add the new Multi-Timeframe Analysis component */}
+      {analysis.technical && analysis.technical.multiTimeframe && (
+        <div className="multi-timeframe-container">
+          <MultiTimeframeAnalysis technical={analysis.technical} />
+        </div>
+      )}
 
       {/* Analysis Grid */}
       <div className="analysis-grid">

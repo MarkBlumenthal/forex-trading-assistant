@@ -1,23 +1,22 @@
-const { getForexData } = require('./priceDataService');
-const { calculateIndicators, analyzeIndicators } = require('./technicalAnalysisService');
+const { getMultiTimeframeData } = require('./priceDataService');
+const { analyzeMultiTimeframe } = require('./technicalAnalysisService');
 const { getMarketNews } = require('./newsAnalysisService');
 const { getEconomicCalendar } = require('./economicCalendarService');
 const { calculatePosition, validateTarget } = require('./positionCalculator');
 
 async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', accountSettings = null) {
-  console.log(`Starting comprehensive analysis for ${currencyPair} at ${timeframe}...`);
+  console.log(`Starting comprehensive analysis for ${currencyPair}...`);
   
   const [baseCurrency, quoteCurrency] = currencyPair.split('/');
   
   try {
-    // 1. Get price data
-    console.log(`Fetching ${currencyPair} price data...`);
-    const priceData = await getForexData(baseCurrency, quoteCurrency, '15min');
+    // 1. Get multi-timeframe price data
+    console.log(`Fetching ${currencyPair} price data for multiple timeframes...`);
+    const multiTimeframeData = await getMultiTimeframeData(baseCurrency, quoteCurrency);
     
-    // 2. Calculate technical indicators
-    console.log('Calculating technical indicators...');
-    const indicators = calculateIndicators(priceData);
-    const technicalAnalysis = analyzeIndicators(indicators);
+    // 2. Perform multi-timeframe technical analysis
+    console.log('Calculating technical indicators across timeframes...');
+    const technicalAnalysis = analyzeMultiTimeframe(multiTimeframeData);
     
     // 3. Get news analysis for this currency pair
     console.log(`Analyzing news for ${currencyPair}...`);
@@ -25,7 +24,7 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
     
     // 4. Check economic calendar
     console.log('Checking economic calendar...');
-    const economicCalendar = await getEconomicCalendar();
+    const economicCalendar = await getEconomicCalendar(currencyPair);
     
     // 5. Make final decision
     const decision = makeDecision(technicalAnalysis, newsAnalysis, economicCalendar);
@@ -35,10 +34,13 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
     let targetValidation = null;
     
     if (accountSettings) {
+      // Use 15min data for current price as it's the most recent
+      const currentPrice = multiTimeframeData.fifteenMin[multiTimeframeData.fifteenMin.length - 1].close;
+      
       positionSizing = calculatePosition(
         accountSettings.accountBalance,
-        accountSettings.targetProfit, // Now £50 per trade
-        indicators.currentPrice,
+        accountSettings.targetProfit,
+        currentPrice,
         currencyPair
       );
       
@@ -58,12 +60,20 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       reasoning: decision.reasoning,
       risks: decision.risks,
       technical: {
-        indicators: indicators,
-        analysis: technicalAnalysis
+        indicators: technicalAnalysis.timeframes.fifteenMin.indicators,  // For backward compatibility
+        analysis: technicalAnalysis.timeframes.fifteenMin,  // For backward compatibility
+        multiTimeframe: {
+          daily: technicalAnalysis.timeframes.daily,
+          fourHour: technicalAnalysis.timeframes.fourHour,
+          oneHour: technicalAnalysis.timeframes.oneHour,
+          fifteenMin: technicalAnalysis.timeframes.fifteenMin,
+          overallDirection: technicalAnalysis.overallDirection,
+          alignmentScore: technicalAnalysis.alignmentScore
+        }
       },
       news: newsAnalysis,
       economic: economicCalendar,
-      priceData: priceData.slice(-20), // Last 20 candles for chart
+      priceData: multiTimeframeData.fifteenMin.slice(-20), // Last 20 candles for chart
       positionSizing: positionSizing,
       targetValidation: targetValidation
     };
@@ -94,45 +104,46 @@ function makeDecision(technical, news, economic) {
     return decision;
   }
 
-  // Weight the signals
-  const technicalWeight = 0.6;
-  const newsWeight = 0.4;
-
-  // Calculate technical score
-  let technicalScore = 0;
-  if (technical.direction === 'BUY') technicalScore = 1;
-  if (technical.direction === 'SELL') technicalScore = -1;
-
+  // Get overall technical direction and confidence from multi-timeframe analysis
+  const technicalDirection = technical.overallDirection;
+  const technicalConfidence = technical.confidence;
+  
   // Calculate news score
   let newsScore = 0;
   if (news.sentiment === 'BULLISH') newsScore = 1;
   if (news.sentiment === 'BEARISH') newsScore = -1;
 
-  // Combined score
-  const combinedScore = (technicalScore * technicalWeight) + (newsScore * newsWeight);
+  // Determine if news aligns with technical
+  const newsAligns = (
+    (newsScore === 1 && technicalDirection === 'BUY') || 
+    (newsScore === -1 && technicalDirection === 'SELL')
+  );
   
-  // Determine confidence
-  const alignmentBonus = (technicalScore === newsScore && technicalScore !== 0) ? 15 : 0;
-  const baseConfidence = technical.confidence || 50;
-  decision.confidence = Math.min(85, baseConfidence + alignmentBonus);
+  // Potential confidence boost from news alignment
+  const newsBoost = newsAligns ? 5 : 0;
+  
+  // Final confidence calculation
+  decision.confidence = Math.min(85, technicalConfidence + newsBoost);
 
-  // Make decision based on combined score
-  if (combinedScore > 0.3 && decision.confidence >= 80) {
+  // Make decision based on direction and confidence
+  if (technicalDirection === 'BUY' && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'BUY';
-    decision.reasoning.push(`Technical indicators bullish (${technical.bullishSignals} vs ${technical.bearishSignals})`);
+    decision.reasoning.push(`Multi-timeframe analysis shows strong bullish trend`);
+    decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
     if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports buying');
     decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
-  } else if (combinedScore < -0.3 && decision.confidence >= 80) {
+  } else if (technicalDirection === 'SELL' && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'SELL';
-    decision.reasoning.push(`Technical indicators bearish (${technical.bearishSignals} vs ${technical.bullishSignals})`);
+    decision.reasoning.push(`Multi-timeframe analysis shows strong bearish trend`);
+    decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
     if (news.sentiment === 'BEARISH') decision.reasoning.push('News sentiment supports selling');
     decision.reasoning.push(`High confidence level: ${decision.confidence}%`);
   } else {
     decision.action = 'WAIT';
-    decision.reasoning.push('Insufficient signal alignment');
-    if (Math.abs(combinedScore) < 0.3) decision.reasoning.push('Mixed or weak signals');
+    decision.reasoning.push('Insufficient signal strength or alignment across timeframes');
+    if (technicalDirection === 'NEUTRAL') decision.reasoning.push('No clear trend direction');
     if (decision.confidence < 80) decision.reasoning.push(`Confidence below 80% threshold (current: ${decision.confidence}%)`);
   }
 
@@ -140,10 +151,19 @@ function makeDecision(technical, news, economic) {
   if (economic.tradingRecommendation === 'CAUTION') {
     decision.risks.push('Multiple economic events today - exercise caution');
   }
-  if (technical.direction === 'NEUTRAL') {
-    decision.risks.push('Market in consolidation - false breakouts possible');
+  
+  // Check for timeframe conflicts
+  const timeframes = technical.timeframes;
+  if (timeframes.daily.direction !== timeframes.fourHour.direction) {
+    decision.risks.push('Daily and 4-hour timeframes show conflicting signals');
   }
-  if (Math.abs(technicalScore - newsScore) > 0.5) {
+  if (timeframes.fourHour.direction !== timeframes.oneHour.direction) {
+    decision.risks.push('4-hour and 1-hour timeframes show conflicting signals');
+  }
+  
+  // Add risk if news and technical conflict
+  if ((technicalDirection === 'BUY' && news.sentiment === 'BEARISH') || 
+      (technicalDirection === 'SELL' && news.sentiment === 'BULLISH')) {
     decision.risks.push('Technical and fundamental analysis conflict');
   }
   

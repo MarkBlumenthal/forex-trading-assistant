@@ -48,7 +48,7 @@ const EconomicCalendar = ({ economic }) => {
 
       <h4>Today's Economic Events</h4>
       {economic.events.length === 0 ? (
-        <p>No significant EUR/USD events scheduled</p>
+        <p>No significant {economic.currencyPair} events scheduled</p>
       ) : (
         <ul className="event-list">
           {economic.events.map((event, index) => (

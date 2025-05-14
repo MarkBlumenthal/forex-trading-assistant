@@ -5,13 +5,16 @@ const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY || 'demo';
 
 async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15min') {
   try {
+    // Convert our interval format to Twelve Data format
+    const twelveDataInterval = mapIntervalToTwelveData(interval);
+    
     // Twelve Data API for real forex data
     const response = await axios.get('https://api.twelvedata.com/time_series', {
       params: {
         symbol: `${fromSymbol}/${toSymbol}`,
-        interval,
+        interval: twelveDataInterval,
         apikey: TWELVE_DATA_API_KEY,
-        outputsize: 100, // Get last 100 data points
+        outputsize: interval === 'daily' ? 50 : 100, // Fewer daily candles needed
         timezone: 'Asia/Jerusalem'
       }
     });
@@ -34,20 +37,24 @@ async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15
     console.error('Error fetching forex data:', error.message);
     
     // Try alternative: Alpha Vantage
-    return getAlternativeForexData(fromSymbol, toSymbol);
+    return getAlternativeForexData(fromSymbol, toSymbol, interval);
   }
 }
 
-async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD') {
+async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15min') {
   try {
+    // Map our interval format to Alpha Vantage format
+    const avInterval = mapIntervalToAlphaVantage(interval);
+    const avFunction = interval === 'daily' ? 'FX_DAILY' : 'FX_INTRADAY';
+    
     // Alpha Vantage as backup
     const response = await axios.get('https://www.alphavantage.co/query', {
       params: {
-        function: 'FX_INTRADAY',
+        function: avFunction,
         from_symbol: fromSymbol,
         to_symbol: toSymbol,
-        interval: '15min',
-        apikey: 'demo', // Limited calls with demo key
+        interval: avInterval, // Only used for intraday
+        apikey: 'demo',
         outputsize: 'compact'
       }
     });
@@ -56,7 +63,13 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD') {
       throw new Error('Alpha Vantage rate limit reached');
     }
 
-    const timeSeries = response.data['Time Series FX (15min)'];
+    // Handle different response formats based on timeframe
+    let timeSeries;
+    if (interval === 'daily') {
+      timeSeries = response.data['Time Series FX (Daily)'];
+    } else {
+      timeSeries = response.data[`Time Series FX (${avInterval})`];
+    }
     
     if (!timeSeries) {
       throw new Error('No data available from Alpha Vantage');
@@ -77,7 +90,58 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD') {
   }
 }
 
-// New function to get pip value for different pairs
+// Helper function to map our interval format to Twelve Data format
+function mapIntervalToTwelveData(interval) {
+  switch (interval) {
+    case '1min': return '1min';
+    case '5min': return '5min';
+    case '15min': return '15min';
+    case '30min': return '30min';
+    case '1hour': return '1h';
+    case '4hour': return '4h';
+    case 'daily': return '1day';
+    default: return '15min';
+  }
+}
+
+// Helper function to map our interval format to Alpha Vantage format
+function mapIntervalToAlphaVantage(interval) {
+  switch (interval) {
+    case '1min': return '1min';
+    case '5min': return '5min';
+    case '15min': return '15min';
+    case '30min': return '30min';
+    case '1hour': return '60min';
+    case '4hour': return '240min'; // Note: Alpha Vantage doesn't support 4h directly
+    case 'daily': return 'daily'; // Not used for intraday
+    default: return '15min';
+  }
+}
+
+// New function to fetch data for multiple timeframes
+async function getMultiTimeframeData(fromSymbol, toSymbol) {
+  try {
+    // Fetch data for all required timeframes
+    const [dailyData, fourHourData, oneHourData, fifteenMinData] = await Promise.all([
+      getForexData(fromSymbol, toSymbol, 'daily'),
+      getForexData(fromSymbol, toSymbol, '4hour'),
+      getForexData(fromSymbol, toSymbol, '1hour'),
+      getForexData(fromSymbol, toSymbol, '15min'),
+    ]);
+    
+    return {
+      daily: dailyData,
+      fourHour: fourHourData,
+      oneHour: oneHourData,
+      fifteenMin: fifteenMinData
+    };
+  } catch (error) {
+    console.error('Error fetching multi-timeframe data:', error);
+    throw error;
+  }
+}
+
+// Get pip value for different pairs
 function getPipValue(fromSymbol, toSymbol, currentPrice) {
   // For most pairs, 1 pip = 0.0001
   // For JPY pairs, 1 pip = 0.01
@@ -102,5 +166,6 @@ function getPipValue(fromSymbol, toSymbol, currentPrice) {
 
 module.exports = { 
   getForexData,
+  getMultiTimeframeData,
   getPipValue
 };

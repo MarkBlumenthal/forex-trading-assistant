@@ -2,21 +2,31 @@ const axios = require('axios');
 const Parser = require('rss-parser');
 const parser = new Parser();
 
-async function getEconomicCalendar() {
+async function getEconomicCalendar(currencyPair = 'EUR/USD') {
   try {
+    // Split the currency pair to get base and quote currencies
+    const [baseCurrency, quoteCurrency] = currencyPair ? currencyPair.split('/') : ['EUR', 'USD'];
+    
     const events = await fetchEconomicEvents();
     
+    // Filter events for the specific currency pair
+    const relevantEvents = events.filter(event => 
+      event.currency === baseCurrency || event.currency === quoteCurrency
+    );
+    
     return {
-      hasHighImpactEvents: checkHighImpactEvents(events),
-      events: events,
-      tradingRecommendation: getCalendarRecommendation(events)
+      hasHighImpactEvents: checkHighImpactEvents(relevantEvents),
+      events: relevantEvents,
+      tradingRecommendation: getCalendarRecommendation(relevantEvents),
+      currencyPair: currencyPair // Add currency pair to the response
     };
   } catch (error) {
     console.error('Economic calendar error:', error);
     return {
       hasHighImpactEvents: false,
       events: [],
-      tradingRecommendation: 'PROCEED'
+      tradingRecommendation: 'PROCEED',
+      currencyPair: currencyPair // Add currency pair to the response
     };
   }
 }
@@ -51,8 +61,7 @@ async function fetchEconomicEvents() {
           currency,
           description: item.contentSnippet || ''
         };
-      })
-      .filter(event => event.currency === 'EUR' || event.currency === 'USD');
+      });
     
     return events;
   } catch (error) {
@@ -92,8 +101,7 @@ async function fetchAlternativeCalendar() {
         impact: determineEventImpact(item.title),
         currency: extractCurrency(item.title),
         description: item.contentSnippet || ''
-      }))
-      .filter(event => event.currency === 'EUR' || event.currency === 'USD');
+      }));
     
     return events;
   } catch (error) {
@@ -137,6 +145,37 @@ function extractCurrency(title) {
       titleUpper.includes('FED') || titleUpper.includes('FOMC') ||
       titleUpper.includes('AMERICAN') || titleUpper.includes('UNITED STATES')) {
     return 'USD';
+  }
+  
+  // GBP related
+  if (titleUpper.includes('GBP') || titleUpper.includes('POUND') ||
+      titleUpper.includes('BOE') || titleUpper.includes('BRITISH') ||
+      titleUpper.includes('UK ') || titleUpper.includes('UNITED KINGDOM')) {
+    return 'GBP';
+  }
+  
+  // JPY related
+  if (titleUpper.includes('JPY') || titleUpper.includes('YEN') ||
+      titleUpper.includes('BOJ') || titleUpper.includes('JAPAN')) {
+    return 'JPY';
+  }
+  
+  // AUD related
+  if (titleUpper.includes('AUD') || titleUpper.includes('AUSSIE') ||
+      titleUpper.includes('RBA') || titleUpper.includes('AUSTRALIA')) {
+    return 'AUD';
+  }
+  
+  // NZD related
+  if (titleUpper.includes('NZD') || titleUpper.includes('KIWI') ||
+      titleUpper.includes('RBNZ') || titleUpper.includes('NEW ZEALAND')) {
+    return 'NZD';
+  }
+  
+  // ZAR related
+  if (titleUpper.includes('ZAR') || titleUpper.includes('RAND') ||
+      titleUpper.includes('SOUTH AFRICA')) {
+    return 'ZAR';
   }
   
   return 'OTHER';
