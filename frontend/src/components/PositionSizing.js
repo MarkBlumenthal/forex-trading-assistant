@@ -3,6 +3,9 @@ import React from 'react';
 const PositionSizing = ({ positionData, decision }) => {
   if (!positionData || decision !== 'TRADE') return null;
 
+  // Select the appropriate setup based on trade direction
+  const tradeSetup = positionData.direction === 'BUY' ? positionData.buySetup : positionData.sellSetup;
+
   return (
     <div className="position-sizing">
       <h3>Position Sizing & Trade Setup for {positionData.currencyPair}</h3>
@@ -16,7 +19,7 @@ const PositionSizing = ({ positionData, decision }) => {
         <div className="position-card">
           <h4>Trade Targets</h4>
           <p>Target profit: £{positionData.targetProfit.toFixed(2)}</p>
-          <p>Required pips: {positionData.requiredPips}</p>
+          <p>Required pips: {positionData.takeProfitPips}</p>
           <p>Projected profit: £{positionData.projectedProfit.toFixed(2)}</p>
         </div>
         
@@ -35,14 +38,34 @@ const PositionSizing = ({ positionData, decision }) => {
         </div>
       </div>
       
+      <div className="trade-prices">
+        <h4>Exact Price Levels:</h4>
+        <div className="trade-prices-grid">
+          <div className="price-card entry">
+            <strong>Entry Price:</strong>
+            <span>{tradeSetup.entry}</span>
+          </div>
+          <div className="price-card stop-loss">
+            <strong>Stop Loss Price:</strong>
+            <span>{tradeSetup.stopLoss}</span>
+          </div>
+          <div className="price-card take-profit">
+            <strong>Take Profit Price:</strong>
+            <span>{tradeSetup.takeProfit}</span>
+          </div>
+        </div>
+      </div>
+      
       <div className="mt4-instructions">
         <h4>MT4 Setup Instructions:</h4>
         <ol>
           <li>Open {positionData.currencyPair} chart in MT4</li>
           <li>Set order type: Market Order</li>
+          <li>Direction: {positionData.direction}</li>
           <li>Volume: {positionData.recommendedLotSize} lots</li>
-          <li>Stop Loss: {positionData.stopLossPips} pips from entry</li>
-          <li>Take Profit: {positionData.takeProfitPips} pips from entry</li>
+          <li>Entry Price: {tradeSetup.entry}</li>
+          <li>Stop Loss: {tradeSetup.stopLoss}</li>
+          <li>Take Profit: {tradeSetup.takeProfit}</li>
         </ol>
       </div>
     </div>

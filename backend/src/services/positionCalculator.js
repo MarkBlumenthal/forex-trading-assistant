@@ -23,23 +23,49 @@ function calculatePosition(accountBalanceGBP, targetProfitGBP, currentPrice, cur
   // Calculate projected profit
   const projectedProfit = takeProfitPips * standardLotSize * pipValuePerLot;
   
+  // Calculate actual stop loss and take profit prices
+  const isJPYPair = quoteCurrency === 'JPY' || baseCurrency === 'JPY';
+  const pipSize = isJPYPair ? 0.01 : 0.0001;
+  
+  // Calculate entry, stop loss and take profit prices
+  const entryPrice = currentPrice;
+  
+  // For BUY trades: SL below entry, TP above entry
+  const buyStopLossPrice = parseFloat((entryPrice - (stopLossPips * pipSize)).toFixed(isJPYPair ? 3 : 5));
+  const buyTakeProfitPrice = parseFloat((entryPrice + (takeProfitPips * pipSize)).toFixed(isJPYPair ? 3 : 5));
+  
+  // For SELL trades: SL above entry, TP below entry
+  const sellStopLossPrice = parseFloat((entryPrice + (stopLossPips * pipSize)).toFixed(isJPYPair ? 3 : 5));
+  const sellTakeProfitPrice = parseFloat((entryPrice - (takeProfitPips * pipSize)).toFixed(isJPYPair ? 3 : 5));
+  
   return {
     accountBalance: accountBalanceGBP,
-    targetProfit: projectedProfit, // Now calculated based on our risk:reward model
+    targetProfit: projectedProfit,
     riskPerTrade: riskPerTradeGBP,
     calculatedLotSize: roundedLotSize,
-    recommendedLotSize: standardLotSize, // Always use standard lot size based on balance
+    recommendedLotSize: standardLotSize,
     stopLossPips: stopLossPips,
     takeProfitPips: takeProfitPips,
     pipValue: pipValuePerLot,
     maxRiskPercent: 2,
     currencyPair: currencyPair,
     projectedProfit: projectedProfit,
-    riskRewardRatio: takeProfitPips / stopLossPips
+    riskRewardRatio: takeProfitPips / stopLossPips,
+    entryPrice: entryPrice,
+    buySetup: {
+      entry: entryPrice,
+      stopLoss: buyStopLossPrice,
+      takeProfit: buyTakeProfitPrice
+    },
+    sellSetup: {
+      entry: entryPrice,
+      stopLoss: sellStopLossPrice,
+      takeProfit: sellTakeProfitPrice
+    }
   };
 }
 
-// New function to determine standard lot size based on account balance
+// Determine standard lot size based on account balance
 function determineStandardLotSize(accountBalance) {
   if (accountBalance < 2000) return 0.1;
   if (accountBalance < 3000) return 0.2;
@@ -57,9 +83,9 @@ function validateTarget(accountBalance, targetProfit) {
   const profitPercent = (targetProfit / accountBalance) * 100;
   
   return {
-    isRealistic: true, // We're now using a fixed 3:1 R:R strategy, so always realistic
+    isRealistic: true, // We're using a fixed 3:1 R:R strategy, so always realistic
     profitPercent: profitPercent,
-    warning: null, // No warnings needed since we're using a fixed strategy
+    warning: null,
     recommendation: null
   };
 }

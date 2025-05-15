@@ -281,51 +281,44 @@ function analyzeIndicators(indicators) {
 }
 
 function analyzeMultiTimeframe(multiTimeframeData) {
-  // Analyze each timeframe
-  const dailyAnalysis = analyzeTimeframe(multiTimeframeData.daily);
-  const fourHourAnalysis = analyzeTimeframe(multiTimeframeData.fourHour);
+  // Analyze each timeframe with new timeframes
   const oneHourAnalysis = analyzeTimeframe(multiTimeframeData.oneHour);
+  const thirtyMinAnalysis = analyzeTimeframe(multiTimeframeData.thirtyMin);
   const fifteenMinAnalysis = analyzeTimeframe(multiTimeframeData.fifteenMin);
+  const fiveMinAnalysis = analyzeTimeframe(multiTimeframeData.fiveMin);
   
   // Calculate overall direction based on weighted timeframe signals
   const directions = {
-    daily: dailyAnalysis.direction === 'BUY' ? 1 : dailyAnalysis.direction === 'SELL' ? -1 : 0,
-    fourHour: fourHourAnalysis.direction === 'BUY' ? 1 : fourHourAnalysis.direction === 'SELL' ? -1 : 0,
     oneHour: oneHourAnalysis.direction === 'BUY' ? 1 : oneHourAnalysis.direction === 'SELL' ? -1 : 0,
-    fifteenMin: fifteenMinAnalysis.direction === 'BUY' ? 1 : fifteenMinAnalysis.direction === 'SELL' ? -1 : 0
+    thirtyMin: thirtyMinAnalysis.direction === 'BUY' ? 1 : thirtyMinAnalysis.direction === 'SELL' ? -1 : 0,
+    fifteenMin: fifteenMinAnalysis.direction === 'BUY' ? 1 : fifteenMinAnalysis.direction === 'SELL' ? -1 : 0,
+    fiveMin: fiveMinAnalysis.direction === 'BUY' ? 1 : fiveMinAnalysis.direction === 'SELL' ? -1 : 0
   };
   
-  // MODIFIED: Adjust weights to give more importance to shorter timeframes
-  // This will make the system more responsive to recent price action
+  // Adjust weights for the new timeframes
   const weightedSum = 
-    (directions.daily * 3) +       // Was 4, now 3
-    (directions.fourHour * 3) +    // Same importance as daily
-    (directions.oneHour * 2) +     // Same as before
-    (directions.fifteenMin * 2);   // Was 1, now 2 (more importance)
+    (directions.oneHour * 4) +      // Highest weight for the 1-hour timeframe
+    (directions.thirtyMin * 3) +    // High weight for 30-min
+    (directions.fifteenMin * 2) +   // Medium weight for 15-min
+    (directions.fiveMin * 1);       // Lowest weight for 5-min
   
-  // MODIFIED: Lower the threshold for direction determination
+  // Keep threshold at >3 for conservative signals
   let overallDirection = 'NEUTRAL';
-  if (weightedSum >= 2) overallDirection = 'BUY';      // Was >3, now >=2
-  else if (weightedSum <= -2) overallDirection = 'SELL'; // Was <-3, now <=-2
+  if (weightedSum > 3) overallDirection = 'BUY';      
+  else if (weightedSum < -3) overallDirection = 'SELL'; 
   
   // Calculate alignment score (how well timeframes align)
   let alignmentScore = 0;
-  if (directions.daily === directions.fourHour && directions.daily !== 0) alignmentScore += 2;
-  if (directions.fourHour === directions.oneHour && directions.fourHour !== 0) alignmentScore += 2;
-  if (directions.oneHour === directions.fifteenMin && directions.oneHour !== 0) alignmentScore += 1;
-  
-  // MODIFIED: Give more weight to 1H and 15M alignment
-  if (directions.oneHour !== 0 && directions.oneHour === directions.fifteenMin) {
-    alignmentScore += 1; // Extra point for 1H and 15M alignment (now worth 2 points total)
-  }
+  if (directions.oneHour === directions.thirtyMin && directions.oneHour !== 0) alignmentScore += 2;
+  if (directions.thirtyMin === directions.fifteenMin && directions.thirtyMin !== 0) alignmentScore += 2;
+  if (directions.fifteenMin === directions.fiveMin && directions.fifteenMin !== 0) alignmentScore += 1;
   
   // Calculate confidence based on alignment and signal strength
-  // MODIFIED: Increase base confidence and weights for signal strength
   const confidence = Math.min(
     85, // Cap at 85%
-    45 + // Base confidence (was 40, now 45)
+    45 + // Base confidence
     (alignmentScore * 5) + // Add for alignment (max 25%)
-    (Math.abs(weightedSum) * 2.5) // Add for signal strength (was 2, now 2.5)
+    (Math.abs(weightedSum) * 2.5) // Add for signal strength
   );
   
   return {
@@ -334,10 +327,10 @@ function analyzeMultiTimeframe(multiTimeframeData) {
     alignmentScore,
     weightedSum,
     timeframes: {
-      daily: dailyAnalysis,
-      fourHour: fourHourAnalysis,
       oneHour: oneHourAnalysis,
-      fifteenMin: fifteenMinAnalysis
+      thirtyMin: thirtyMinAnalysis,
+      fifteenMin: fifteenMinAnalysis,
+      fiveMin: fiveMinAnalysis
     }
   };
 }

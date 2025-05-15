@@ -34,19 +34,20 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
     let targetValidation = null;
     
     if (accountSettings) {
-      // Use 15min data for current price as it's the most recent
-      const currentPrice = multiTimeframeData.fifteenMin[multiTimeframeData.fifteenMin.length - 1].close;
+      // Use 5min data for current price as it's the most recent
+      const currentPrice = multiTimeframeData.fiveMin[multiTimeframeData.fiveMin.length - 1].close;
       
       positionSizing = calculatePosition(
         accountSettings.accountBalance,
         accountSettings.targetProfit,
         currentPrice,
-        currencyPair
+        currencyPair,
+        decision.direction
       );
       
       targetValidation = validateTarget(
         accountSettings.accountBalance,
-        positionSizing.projectedProfit // Use calculated profit based on 3:1 ratio
+        positionSizing.projectedProfit
       );
     }
     
@@ -60,20 +61,20 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       reasoning: decision.reasoning,
       risks: decision.risks,
       technical: {
-        indicators: technicalAnalysis.timeframes.fifteenMin.indicators,
-        analysis: technicalAnalysis.timeframes.fifteenMin,
+        indicators: technicalAnalysis.timeframes.fiveMin.indicators,
+        analysis: technicalAnalysis.timeframes.fiveMin,
         multiTimeframe: {
-          daily: technicalAnalysis.timeframes.daily,
-          fourHour: technicalAnalysis.timeframes.fourHour,
           oneHour: technicalAnalysis.timeframes.oneHour,
+          thirtyMin: technicalAnalysis.timeframes.thirtyMin,
           fifteenMin: technicalAnalysis.timeframes.fifteenMin,
+          fiveMin: technicalAnalysis.timeframes.fiveMin,
           overallDirection: technicalAnalysis.overallDirection,
           alignmentScore: technicalAnalysis.alignmentScore
         }
       },
       news: newsAnalysis,
       economic: economicCalendar,
-      priceData: multiTimeframeData.fifteenMin.slice(-20), // Last 20 candles for chart
+      priceData: multiTimeframeData.fiveMin.slice(-20), // Last 20 candles for chart
       positionSizing: positionSizing,
       targetValidation: targetValidation
     };
@@ -106,8 +107,6 @@ function makeDecision(technical, news, economic) {
 
   // Get overall technical direction and confidence from multi-timeframe analysis
   const technicalDirection = technical.overallDirection;
-  
-  // MODIFIED: Reduce minimum threshold for confidence to generate more signals
   const technicalConfidence = technical.confidence;
   
   // Calculate news score
@@ -120,27 +119,24 @@ function makeDecision(technical, news, economic) {
   const newsAligns = (
     (newsScore === 1 && technicalDirection === 'BUY') || 
     (newsScore === -1 && technicalDirection === 'SELL') ||
-    (newsScore === 0) // CHANGED: Consider neutral news as non-conflicting
+    (newsScore === 0) // Consider neutral news as non-conflicting
   );
   
   // Potential confidence boost from news alignment
   const newsBoost = newsAligns ? 5 : 0;
   
-  // MODIFIED: Boost the base confidence level to get more signals
-  const baseConfidence = technicalConfidence + 10;
-  
   // Final confidence calculation
-  decision.confidence = Math.min(85, baseConfidence + newsBoost);
+  decision.confidence = Math.min(85, technicalConfidence + newsBoost);
 
-  // MODIFIED: Lower the threshold for trading to 70% from 80%
-  if (technicalDirection === 'BUY' && decision.confidence >= 70) {
+  // Use 80% threshold for trading decisions
+  if (technicalDirection === 'BUY' && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'BUY';
     decision.reasoning.push(`Multi-timeframe analysis shows bullish trend`);
     decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
     if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports buying');
     decision.reasoning.push(`Confidence level: ${decision.confidence}%`);
-  } else if (technicalDirection === 'SELL' && decision.confidence >= 70) {
+  } else if (technicalDirection === 'SELL' && decision.confidence >= 80) {
     decision.action = 'TRADE';
     decision.direction = 'SELL';
     decision.reasoning.push(`Multi-timeframe analysis shows bearish trend`);
@@ -155,8 +151,8 @@ function makeDecision(technical, news, economic) {
       decision.reasoning.push(`Insufficient confidence for ${technicalDirection} signal`);
     }
     
-    if (decision.confidence < 70) {
-      decision.reasoning.push(`Confidence below 70% threshold (current: ${decision.confidence}%)`);
+    if (decision.confidence < 80) {
+      decision.reasoning.push(`Confidence below 80% threshold (current: ${decision.confidence}%)`);
     }
   }
 
@@ -165,13 +161,13 @@ function makeDecision(technical, news, economic) {
     decision.risks.push('Multiple economic events today - exercise caution');
   }
   
-  // Check for timeframe conflicts
+  // Check for timeframe conflicts - updated for new timeframes
   const timeframes = technical.timeframes;
-  if (timeframes.daily.direction !== timeframes.fourHour.direction) {
-    decision.risks.push('Daily and 4-hour timeframes show conflicting signals');
+  if (timeframes.oneHour.direction !== timeframes.thirtyMin.direction) {
+    decision.risks.push('1-hour and 30-minute timeframes show conflicting signals');
   }
-  if (timeframes.fourHour.direction !== timeframes.oneHour.direction) {
-    decision.risks.push('4-hour and 1-hour timeframes show conflicting signals');
+  if (timeframes.thirtyMin.direction !== timeframes.fifteenMin.direction) {
+    decision.risks.push('30-minute and 15-minute timeframes show conflicting signals');
   }
   
   // Add risk if news and technical conflict

@@ -3,7 +3,7 @@ import React from 'react';
 const MultiTimeframeAnalysis = ({ technical }) => {
   if (!technical || !technical.multiTimeframe) return null;
   
-  const { daily, fourHour, oneHour, fifteenMin, overallDirection, alignmentScore } = technical.multiTimeframe;
+  const { oneHour, thirtyMin, fifteenMin, fiveMin, overallDirection, alignmentScore } = technical.multiTimeframe;
   
   const getDirectionColor = (direction) => {
     switch(direction) {
@@ -39,28 +39,28 @@ const MultiTimeframeAnalysis = ({ technical }) => {
         </thead>
         <tbody>
           <tr>
-            <td><strong>Daily</strong></td>
-            <td style={{ color: getDirectionColor(daily.direction) }}>{daily.direction}</td>
-            <td>{daily.bullishSignals}</td>
-            <td>{daily.bearishSignals}</td>
-          </tr>
-          <tr>
-            <td><strong>4 Hour</strong></td>
-            <td style={{ color: getDirectionColor(fourHour.direction) }}>{fourHour.direction}</td>
-            <td>{fourHour.bullishSignals}</td>
-            <td>{fourHour.bearishSignals}</td>
-          </tr>
-          <tr>
             <td><strong>1 Hour</strong></td>
             <td style={{ color: getDirectionColor(oneHour.direction) }}>{oneHour.direction}</td>
             <td>{oneHour.bullishSignals}</td>
             <td>{oneHour.bearishSignals}</td>
           </tr>
           <tr>
-            <td><strong>15 Min</strong></td>
+            <td><strong>30 Minute</strong></td>
+            <td style={{ color: getDirectionColor(thirtyMin.direction) }}>{thirtyMin.direction}</td>
+            <td>{thirtyMin.bullishSignals}</td>
+            <td>{thirtyMin.bearishSignals}</td>
+          </tr>
+          <tr>
+            <td><strong>15 Minute</strong></td>
             <td style={{ color: getDirectionColor(fifteenMin.direction) }}>{fifteenMin.direction}</td>
             <td>{fifteenMin.bullishSignals}</td>
             <td>{fifteenMin.bearishSignals}</td>
+          </tr>
+          <tr>
+            <td><strong>5 Minute</strong></td>
+            <td style={{ color: getDirectionColor(fiveMin.direction) }}>{fiveMin.direction}</td>
+            <td>{fiveMin.bullishSignals}</td>
+            <td>{fiveMin.bearishSignals}</td>
           </tr>
         </tbody>
       </table>
@@ -68,22 +68,28 @@ const MultiTimeframeAnalysis = ({ technical }) => {
       <div className="timeframe-insights">
         <h4>Timeframe Insights</h4>
         <ul>
-          {daily.direction === fourHour.direction && (
-            <li>Daily and 4-hour timeframes aligned ({daily.direction})</li>
+          {oneHour.direction === thirtyMin.direction && oneHour.direction !== 'NEUTRAL' && (
+            <li>1-hour and 30-minute timeframes aligned ({oneHour.direction})</li>
           )}
-          {fourHour.direction === oneHour.direction && (
-            <li>4-hour and 1-hour timeframes aligned ({fourHour.direction})</li>
+          {thirtyMin.direction === fifteenMin.direction && thirtyMin.direction !== 'NEUTRAL' && (
+            <li>30-minute and 15-minute timeframes aligned ({thirtyMin.direction})</li>
           )}
-          {oneHour.direction === fifteenMin.direction && (
-            <li>1-hour and 15-minute timeframes aligned ({oneHour.direction})</li>
+          {fifteenMin.direction === fiveMin.direction && fifteenMin.direction !== 'NEUTRAL' && (
+            <li>15-minute and 5-minute timeframes aligned ({fifteenMin.direction})</li>
           )}
-          {daily.direction !== fourHour.direction && (
-            <li className="warning">Potential trend change: Daily ({daily.direction}) and 4-hour ({fourHour.direction}) conflict</li>
+          {oneHour.direction !== thirtyMin.direction && 
+           oneHour.direction !== 'NEUTRAL' && 
+           thirtyMin.direction !== 'NEUTRAL' && (
+            <li className="warning">Potential trend change: 1-hour ({oneHour.direction}) and 30-minute ({thirtyMin.direction}) conflict</li>
           )}
-          {daily.direction === 'BUY' && fourHour.direction === 'BUY' && oneHour.direction === 'BUY' && (
+          {oneHour.direction === 'BUY' && 
+           thirtyMin.direction === 'BUY' && 
+           fifteenMin.direction === 'BUY' && (
             <li className="strong">Strong uptrend confirmed across multiple timeframes</li>
           )}
-          {daily.direction === 'SELL' && fourHour.direction === 'SELL' && oneHour.direction === 'SELL' && (
+          {oneHour.direction === 'SELL' && 
+           thirtyMin.direction === 'SELL' && 
+           fifteenMin.direction === 'SELL' && (
             <li className="strong">Strong downtrend confirmed across multiple timeframes</li>
           )}
         </ul>

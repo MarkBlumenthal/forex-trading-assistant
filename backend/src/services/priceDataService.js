@@ -14,7 +14,7 @@ async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15
         symbol: `${fromSymbol}/${toSymbol}`,
         interval: twelveDataInterval,
         apikey: TWELVE_DATA_API_KEY,
-        outputsize: interval === 'daily' ? 50 : 100, // Fewer daily candles needed
+        outputsize: 100, // Get last 100 data points
         timezone: 'Asia/Jerusalem'
       }
     });
@@ -45,16 +45,15 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
   try {
     // Map our interval format to Alpha Vantage format
     const avInterval = mapIntervalToAlphaVantage(interval);
-    const avFunction = interval === 'daily' ? 'FX_DAILY' : 'FX_INTRADAY';
     
     // Alpha Vantage as backup
     const response = await axios.get('https://www.alphavantage.co/query', {
       params: {
-        function: avFunction,
+        function: 'FX_INTRADAY',
         from_symbol: fromSymbol,
         to_symbol: toSymbol,
-        interval: avInterval, // Only used for intraday
-        apikey: 'demo',
+        interval: avInterval,
+        apikey: 'demo', // Limited calls with demo key
         outputsize: 'compact'
       }
     });
@@ -63,13 +62,7 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
       throw new Error('Alpha Vantage rate limit reached');
     }
 
-    // Handle different response formats based on timeframe
-    let timeSeries;
-    if (interval === 'daily') {
-      timeSeries = response.data['Time Series FX (Daily)'];
-    } else {
-      timeSeries = response.data[`Time Series FX (${avInterval})`];
-    }
+    const timeSeries = response.data[`Time Series FX (${avInterval})`];
     
     if (!timeSeries) {
       throw new Error('No data available from Alpha Vantage');
@@ -93,13 +86,10 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
 // Helper function to map our interval format to Twelve Data format
 function mapIntervalToTwelveData(interval) {
   switch (interval) {
-    case '1min': return '1min';
     case '5min': return '5min';
     case '15min': return '15min';
     case '30min': return '30min';
     case '1hour': return '1h';
-    case '4hour': return '4h';
-    case 'daily': return '1day';
     default: return '15min';
   }
 }
@@ -107,33 +97,30 @@ function mapIntervalToTwelveData(interval) {
 // Helper function to map our interval format to Alpha Vantage format
 function mapIntervalToAlphaVantage(interval) {
   switch (interval) {
-    case '1min': return '1min';
     case '5min': return '5min';
     case '15min': return '15min';
     case '30min': return '30min';
     case '1hour': return '60min';
-    case '4hour': return '240min'; // Note: Alpha Vantage doesn't support 4h directly
-    case 'daily': return 'daily'; // Not used for intraday
     default: return '15min';
   }
 }
 
-// New function to fetch data for multiple timeframes
+// New function to fetch data for multiple timeframes - updated with new timeframes
 async function getMultiTimeframeData(fromSymbol, toSymbol) {
   try {
     // Fetch data for all required timeframes
-    const [dailyData, fourHourData, oneHourData, fifteenMinData] = await Promise.all([
-      getForexData(fromSymbol, toSymbol, 'daily'),
-      getForexData(fromSymbol, toSymbol, '4hour'),
+    const [oneHourData, thirtyMinData, fifteenMinData, fiveMinData] = await Promise.all([
       getForexData(fromSymbol, toSymbol, '1hour'),
+      getForexData(fromSymbol, toSymbol, '30min'),
       getForexData(fromSymbol, toSymbol, '15min'),
+      getForexData(fromSymbol, toSymbol, '5min'),
     ]);
     
     return {
-      daily: dailyData,
-      fourHour: fourHourData,
       oneHour: oneHourData,
-      fifteenMin: fifteenMinData
+      thirtyMin: thirtyMinData,
+      fifteenMin: fifteenMinData,
+      fiveMin: fiveMinData
     };
   } catch (error) {
     console.error('Error fetching multi-timeframe data:', error);
