@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY || 'demo';
 
-async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15min') {
+async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '1h') {
   try {
     // Convert our interval format to Twelve Data format
     const twelveDataInterval = mapIntervalToTwelveData(interval);
@@ -14,7 +14,7 @@ async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15
         symbol: `${fromSymbol}/${toSymbol}`,
         interval: twelveDataInterval,
         apikey: TWELVE_DATA_API_KEY,
-        outputsize: 100, // Get last 100 data points
+        outputsize: 150, // Get more data points for pattern recognition
         timezone: 'Asia/Jerusalem'
       }
     });
@@ -29,7 +29,8 @@ async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15
       open: parseFloat(item.open),
       high: parseFloat(item.high),
       low: parseFloat(item.low),
-      close: parseFloat(item.close)
+      close: parseFloat(item.close),
+      volume: parseFloat(item.volume || 0)
     }));
 
     return prices.reverse(); // Most recent last
@@ -41,7 +42,7 @@ async function getForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15
   }
 }
 
-async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '15min') {
+async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', interval = '1h') {
   try {
     // Map our interval format to Alpha Vantage format
     const avInterval = mapIntervalToAlphaVantage(interval);
@@ -54,7 +55,7 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
         to_symbol: toSymbol,
         interval: avInterval,
         apikey: 'demo', // Limited calls with demo key
-        outputsize: 'compact'
+        outputsize: 'full'
       }
     });
 
@@ -73,7 +74,8 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
       open: parseFloat(data['1. open']),
       high: parseFloat(data['2. high']),
       low: parseFloat(data['3. low']),
-      close: parseFloat(data['4. close'])
+      close: parseFloat(data['4. close']),
+      volume: 0 // Alpha Vantage doesn't provide volume for forex
     }));
 
     return prices.reverse();
@@ -86,41 +88,33 @@ async function getAlternativeForexData(fromSymbol = 'EUR', toSymbol = 'USD', int
 // Helper function to map our interval format to Twelve Data format
 function mapIntervalToTwelveData(interval) {
   switch (interval) {
-    case '5min': return '5min';
-    case '15min': return '15min';
-    case '30min': return '30min';
+    case '4hour': return '4h';
     case '1hour': return '1h';
-    default: return '15min';
+    default: return '1h';
   }
 }
 
 // Helper function to map our interval format to Alpha Vantage format
 function mapIntervalToAlphaVantage(interval) {
   switch (interval) {
-    case '5min': return '5min';
-    case '15min': return '15min';
-    case '30min': return '30min';
+    case '4hour': return '240min';
     case '1hour': return '60min';
-    default: return '15min';
+    default: return '60min';
   }
 }
 
-// New function to fetch data for multiple timeframes - updated with new timeframes
+// New function to fetch data for 4h and 1h timeframes
 async function getMultiTimeframeData(fromSymbol, toSymbol) {
   try {
-    // Fetch data for all required timeframes
-    const [oneHourData, thirtyMinData, fifteenMinData, fiveMinData] = await Promise.all([
+    // Fetch data for required timeframes
+    const [fourHourData, oneHourData] = await Promise.all([
+      getForexData(fromSymbol, toSymbol, '4hour'),
       getForexData(fromSymbol, toSymbol, '1hour'),
-      getForexData(fromSymbol, toSymbol, '30min'),
-      getForexData(fromSymbol, toSymbol, '15min'),
-      getForexData(fromSymbol, toSymbol, '5min'),
     ]);
     
     return {
-      oneHour: oneHourData,
-      thirtyMin: thirtyMinData,
-      fifteenMin: fifteenMinData,
-      fiveMin: fiveMinData
+      fourHour: fourHourData,
+      oneHour: oneHourData
     };
   } catch (error) {
     console.error('Error fetching multi-timeframe data:', error);

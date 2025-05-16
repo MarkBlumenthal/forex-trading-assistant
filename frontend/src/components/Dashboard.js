@@ -1,9 +1,7 @@
-// Update Dashboard.js to include the multi-timeframe component
 import React from 'react';
 import GaugeChart from 'react-gauge-chart';
 import PriceChart from './PriceChart';
-import TechnicalIndicators from './TechnicalIndicators';
-import MultiTimeframeAnalysis from './MultiTimeframeAnalysis'; // Import the new component
+import MultiTimeframeAnalysis from './MultiTimeframeAnalysis';
 import NewsSection from './NewsSection';
 import EconomicCalendar from './EconomicCalendar';
 import PositionSizing from './PositionSizing';
@@ -46,7 +44,7 @@ const Dashboard = ({ analysis }) => {
         <div className="decision-content">
           <div 
             className={`decision-action ${analysis.decision}`}
-            style={{ color: getDecisionColor(analysis.decision) }}
+            style={{ color: getDecisionColor(analysis.direction) }}
           >
             {getActionText()}
           </div>
@@ -61,7 +59,7 @@ const Dashboard = ({ analysis }) => {
               textColor="#000"
               formatTextValue={() => `${analysis.confidence}%`}
             />
-            <p>Confidence Level (80% minimum required)</p>
+            <p>Pattern Quality</p>
           </div>
 
           <div className="reasoning">
@@ -86,6 +84,15 @@ const Dashboard = ({ analysis }) => {
         </div>
       </div>
 
+      {/* Next Check Recommendation */}
+      <div className="next-check-panel">
+        <h3>Next Analysis Recommendation</h3>
+        <div className="next-check-info">
+          <p><strong>Check again:</strong> {analysis.nextCheck.nextCheckTime} ({analysis.nextCheck.hoursToNextCheck} hours from now)</p>
+          <p><strong>Reason:</strong> {analysis.nextCheck.reason}</p>
+        </div>
+      </div>
+
       {/* Position Sizing */}
       {analysis.positionSizing && (
         <PositionSizing 
@@ -94,21 +101,20 @@ const Dashboard = ({ analysis }) => {
         />
       )}
 
-      {/* Price Chart */}
+      {/* Price Chart - Pass all necessary data */}
       <div className="chart-container">
-        <PriceChart data={analysis.priceData} currencyPair={analysis.currencyPair} />
+        <PriceChart 
+          data={analysis.priceData} 
+          currencyPair={analysis.currencyPair}
+          fourHourData={analysis.technical.multiTimeframe.fourHour.priceData}
+          oneHourData={analysis.priceData}
+          flagPattern={analysis.technical.flagPattern}
+        />
       </div>
-
-      {/* Add the new Multi-Timeframe Analysis component */}
-      {analysis.technical && analysis.technical.multiTimeframe && (
-        <div className="multi-timeframe-container">
-          <MultiTimeframeAnalysis technical={analysis.technical} />
-        </div>
-      )}
 
       {/* Analysis Grid */}
       <div className="analysis-grid">
-        <TechnicalIndicators technical={analysis.technical} />
+        <MultiTimeframeAnalysis technical={analysis.technical} />
         <NewsSection news={analysis.news} />
         <EconomicCalendar economic={analysis.economic} />
       </div>

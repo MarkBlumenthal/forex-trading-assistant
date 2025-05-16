@@ -3,7 +3,7 @@ import React from 'react';
 const MultiTimeframeAnalysis = ({ technical }) => {
   if (!technical || !technical.multiTimeframe) return null;
   
-  const { oneHour, thirtyMin, fifteenMin, fiveMin, overallDirection, alignmentScore } = technical.multiTimeframe;
+  const { fourHour, oneHour, overallDirection, flagPattern } = technical.multiTimeframe;
   
   const getDirectionColor = (direction) => {
     switch(direction) {
@@ -15,83 +15,84 @@ const MultiTimeframeAnalysis = ({ technical }) => {
   
   return (
     <div className="analysis-section">
-      <h3>Multi-Timeframe Analysis</h3>
+      <h3>Flag Pattern Analysis</h3>
       
       <div style={{ marginBottom: '15px' }}>
-        <strong>Overall Direction: </strong>
+        <strong>Pattern Direction: </strong>
         <span style={{ color: getDirectionColor(overallDirection), fontWeight: 'bold' }}>
           {overallDirection}
         </span>
       </div>
       
-      <div style={{ marginBottom: '15px' }}>
-        <strong>Timeframe Alignment: </strong>{alignmentScore}/5
-      </div>
-      
-      <table className="timeframe-table">
-        <thead>
-          <tr>
-            <th>Timeframe</th>
-            <th>Direction</th>
-            <th>Bullish Signals</th>
-            <th>Bearish Signals</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>1 Hour</strong></td>
-            <td style={{ color: getDirectionColor(oneHour.direction) }}>{oneHour.direction}</td>
-            <td>{oneHour.bullishSignals}</td>
-            <td>{oneHour.bearishSignals}</td>
-          </tr>
-          <tr>
-            <td><strong>30 Minute</strong></td>
-            <td style={{ color: getDirectionColor(thirtyMin.direction) }}>{thirtyMin.direction}</td>
-            <td>{thirtyMin.bullishSignals}</td>
-            <td>{thirtyMin.bearishSignals}</td>
-          </tr>
-          <tr>
-            <td><strong>15 Minute</strong></td>
-            <td style={{ color: getDirectionColor(fifteenMin.direction) }}>{fifteenMin.direction}</td>
-            <td>{fifteenMin.bullishSignals}</td>
-            <td>{fifteenMin.bearishSignals}</td>
-          </tr>
-          <tr>
-            <td><strong>5 Minute</strong></td>
-            <td style={{ color: getDirectionColor(fiveMin.direction) }}>{fiveMin.direction}</td>
-            <td>{fiveMin.bullishSignals}</td>
-            <td>{fiveMin.bearishSignals}</td>
-          </tr>
-        </tbody>
-      </table>
+      {flagPattern.patternDetected ? (
+        <div className="flag-pattern-info" style={{
+          backgroundColor: flagPattern.validTrade ? '#e3f2fd' : '#ffebee',
+          padding: '15px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          borderLeft: `4px solid ${getDirectionColor(flagPattern.direction)}`
+        }}>
+          <h4>{flagPattern.direction === 'BUY' ? 'Bullish' : 'Bearish'} Flag Pattern Detected</h4>
+          
+          {flagPattern.validTrade ? (
+            <>
+              <p style={{ color: '#2e7d32' }}><strong>✓ Valid Trade Setup</strong></p>
+              <p><strong>3-Touch Trendline Rule:</strong> Confirmed</p>
+              <p>
+                <strong>Entry Price:</strong> {flagPattern.entry}
+              </p>
+              <p>
+                <strong>Stop Loss:</strong> {flagPattern.stopLoss} ({flagPattern.stopLossPips} pips)
+              </p>
+              <p>
+                <strong>Take Profit:</strong> {flagPattern.takeProfit} ({flagPattern.takeProfitPips} pips)
+              </p>
+              <p>
+                <strong>Risk/Reward:</strong> 1:3
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ color: '#c62828' }}>
+                <strong>✗ Invalid Trade Setup</strong>
+              </p>
+              <p>
+                {flagPattern.stopLossPips > 20 ? 
+                  `Stop loss (${flagPattern.stopLossPips} pips) exceeds 20-pip limit` : 
+                  'Pattern does not meet trading criteria'}
+              </p>
+              <p>Remember: We only take trades with 20-pip stop loss and 60-pip take profit</p>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="no-pattern-info" style={{
+          backgroundColor: '#f5f5f5',
+          padding: '15px',
+          borderRadius: '5px',
+          marginBottom: '20px'
+        }}>
+          <h4>No Flag Pattern Detected</h4>
+          <p>Waiting for a valid flag pattern with:</p>
+          <ul>
+            <li>Strong directional move (flag pole)</li>
+            <li>Consolidation against the trend</li>
+            <li>At least 3 touches of the trendline</li>
+            <li>Breakout in the direction of the original trend</li>
+            <li>Pullback to the breakout level for entry</li>
+          </ul>
+        </div>
+      )}
       
       <div className="timeframe-insights">
-        <h4>Timeframe Insights</h4>
+        <h4>Flag Pattern Trading Strategy</h4>
         <ul>
-          {oneHour.direction === thirtyMin.direction && oneHour.direction !== 'NEUTRAL' && (
-            <li>1-hour and 30-minute timeframes aligned ({oneHour.direction})</li>
-          )}
-          {thirtyMin.direction === fifteenMin.direction && thirtyMin.direction !== 'NEUTRAL' && (
-            <li>30-minute and 15-minute timeframes aligned ({thirtyMin.direction})</li>
-          )}
-          {fifteenMin.direction === fiveMin.direction && fifteenMin.direction !== 'NEUTRAL' && (
-            <li>15-minute and 5-minute timeframes aligned ({fifteenMin.direction})</li>
-          )}
-          {oneHour.direction !== thirtyMin.direction && 
-           oneHour.direction !== 'NEUTRAL' && 
-           thirtyMin.direction !== 'NEUTRAL' && (
-            <li className="warning">Potential trend change: 1-hour ({oneHour.direction}) and 30-minute ({thirtyMin.direction}) conflict</li>
-          )}
-          {oneHour.direction === 'BUY' && 
-           thirtyMin.direction === 'BUY' && 
-           fifteenMin.direction === 'BUY' && (
-            <li className="strong">Strong uptrend confirmed across multiple timeframes</li>
-          )}
-          {oneHour.direction === 'SELL' && 
-           thirtyMin.direction === 'SELL' && 
-           fifteenMin.direction === 'SELL' && (
-            <li className="strong">Strong downtrend confirmed across multiple timeframes</li>
-          )}
+          <li>4-hour chart: Pattern identification and trend direction</li>
+          <li>1-hour chart: Entry timing and precise levels</li>
+          <li>Fixed 20-pip stop loss requirement</li>
+          <li>Fixed 60-pip take profit (3:1 reward-to-risk ratio)</li>
+          <li>3-touch trendline confirmation required</li>
+          <li>Entry on pullback to the breakout level</li>
         </ul>
       </div>
     </div>

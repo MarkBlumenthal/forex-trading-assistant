@@ -2,21 +2,21 @@ const { getMultiTimeframeData } = require('./priceDataService');
 const { analyzeMultiTimeframe } = require('./technicalAnalysisService');
 const { getMarketNews } = require('./newsAnalysisService');
 const { getEconomicCalendar } = require('./economicCalendarService');
-const { calculatePosition, validateTarget } = require('./positionCalculator');
+const { calculatePosition, validateTarget, determineStandardLotSize } = require('./positionCalculator');
 
 async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', accountSettings = null) {
-  console.log(`Starting comprehensive analysis for ${currencyPair}...`);
+  console.log(`Starting flag pattern analysis for ${currencyPair}...`);
   
   const [baseCurrency, quoteCurrency] = currencyPair.split('/');
   
   try {
     // 1. Get multi-timeframe price data
-    console.log(`Fetching ${currencyPair} price data for multiple timeframes...`);
+    console.log(`Fetching ${currencyPair} price data for 4-hour and 1-hour timeframes...`);
     const multiTimeframeData = await getMultiTimeframeData(baseCurrency, quoteCurrency);
     
-    // 2. Perform multi-timeframe technical analysis
-    console.log('Calculating technical indicators across timeframes...');
-    const technicalAnalysis = analyzeMultiTimeframe(multiTimeframeData);
+    // 2. Perform flag pattern analysis
+    console.log('Analyzing flag patterns...');
+    const technicalAnalysis = analyzeMultiTimeframe(multiTimeframeData, currencyPair);
     
     // 3. Get news analysis for this currency pair
     console.log(`Analyzing news for ${currencyPair}...`);
@@ -34,22 +34,44 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
     let targetValidation = null;
     
     if (accountSettings) {
-      // Use 5min data for current price as it's the most recent
-      const currentPrice = multiTimeframeData.fiveMin[multiTimeframeData.fiveMin.length - 1].close;
+      // Use 1-hour data for current price
+      const currentPrice = multiTimeframeData.oneHour[multiTimeframeData.oneHour.length - 1].close;
       
-      positionSizing = calculatePosition(
-        accountSettings.accountBalance,
-        accountSettings.targetProfit,
-        currentPrice,
-        currencyPair,
-        decision.direction
-      );
+      // If we have a valid flag pattern, use its entry, SL and TP
+      if (technicalAnalysis.flagPattern.validTrade) {
+        positionSizing = {
+          accountBalance: accountSettings.accountBalance,
+          targetProfit: accountSettings.targetProfit,
+          riskPerTrade: accountSettings.accountBalance * 0.02, // 2% risk
+          recommendedLotSize: determineStandardLotSize(accountSettings.accountBalance),
+          stopLossPips: technicalAnalysis.flagPattern.stopLossPips,
+          takeProfitPips: technicalAnalysis.flagPattern.takeProfitPips,
+          maxRiskPercent: 2,
+          currencyPair: currencyPair,
+          entryPrice: technicalAnalysis.flagPattern.entry,
+          stopLossPrice: technicalAnalysis.flagPattern.stopLoss,
+          takeProfitPrice: technicalAnalysis.flagPattern.takeProfit,
+          direction: technicalAnalysis.flagPattern.direction,
+          riskRewardRatio: 3, // Fixed 3:1 ratio
+          // Calculate projected profit in currency
+          projectedProfit: (accountSettings.accountBalance * 0.02) * 3, // 2% risk * 3 (RR ratio)
+          valid: true
+        };
+      } else {
+        // No valid flag pattern, so no position sizing
+        positionSizing = null;
+      }
       
-      targetValidation = validateTarget(
-        accountSettings.accountBalance,
-        positionSizing.projectedProfit
-      );
+      targetValidation = {
+        isRealistic: true,
+        profitPercent: 6, // 2% risk * 3 = 6% reward
+        warning: null,
+        recommendation: null
+      };
     }
+    
+    // Calculate next check recommendation
+    const nextCheckRecommendation = calculateNextCheckTime(technicalAnalysis);
     
     const analysisResult = {
       timestamp: new Date().toISOString(),
@@ -60,21 +82,25 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       direction: decision.direction,
       reasoning: decision.reasoning,
       risks: decision.risks,
+      nextCheck: nextCheckRecommendation, // Add the next check recommendation here
       technical: {
-        indicators: technicalAnalysis.timeframes.fiveMin.indicators,
-        analysis: technicalAnalysis.timeframes.fiveMin,
+        flagPattern: technicalAnalysis.flagPattern,
         multiTimeframe: {
-          oneHour: technicalAnalysis.timeframes.oneHour,
-          thirtyMin: technicalAnalysis.timeframes.thirtyMin,
-          fifteenMin: technicalAnalysis.timeframes.fifteenMin,
-          fiveMin: technicalAnalysis.timeframes.fiveMin,
+          fourHour: { 
+            direction: technicalAnalysis.overallDirection,
+            priceData: multiTimeframeData.fourHour // Pass the full price data
+          },
+          oneHour: { 
+            direction: technicalAnalysis.overallDirection,
+            priceData: multiTimeframeData.oneHour // Pass the full price data
+          },
           overallDirection: technicalAnalysis.overallDirection,
-          alignmentScore: technicalAnalysis.alignmentScore
+          flagPattern: technicalAnalysis.flagPattern
         }
       },
       news: newsAnalysis,
       economic: economicCalendar,
-      priceData: multiTimeframeData.fiveMin.slice(-20), // Last 20 candles for chart
+      priceData: multiTimeframeData.oneHour, // Full 1-hour price data
       positionSizing: positionSizing,
       targetValidation: targetValidation
     };
@@ -85,6 +111,64 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
   } catch (error) {
     console.error('Analysis error:', error);
     throw error;
+  }
+}
+
+function calculateNextCheckTime(technicalAnalysis) {
+  // Default check back time (4 hours)
+  let hoursToNextCheck = 4;
+  const flagPattern = technicalAnalysis.flagPattern;
+  
+  if (flagPattern.patternDetected) {
+    // If a pattern is detected but not valid yet
+    if (!flagPattern.validTrade) {
+      // If we have a breakout but waiting for pullback
+      if (flagPattern.fourHourAnalysis.bullishFlag.breakout?.detected || 
+          flagPattern.fourHourAnalysis.bearishFlag.breakout?.detected) {
+        // Check more often for pullback
+        hoursToNextCheck = 1;
+      } 
+      // If we have consolidation but waiting for breakout
+      else if (flagPattern.fourHourAnalysis.bullishFlag.consolidation?.detected || 
+               flagPattern.fourHourAnalysis.bearishFlag.consolidation?.detected) {
+        // Check every 2 hours for breakout
+        hoursToNextCheck = 2;
+      }
+    } else {
+      // If we have a valid trade, check back in 1 hour to monitor
+      hoursToNextCheck = 1;
+    }
+  } else {
+    // No pattern detected, check back in 4 hours
+    hoursToNextCheck = 4;
+  }
+  
+  // Calculate next check time
+  const now = new Date();
+  const nextCheckTime = new Date(now.getTime() + (hoursToNextCheck * 60 * 60 * 1000));
+  
+  return {
+    hoursToNextCheck,
+    nextCheckTime: nextCheckTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    nextCheckDate: nextCheckTime.toLocaleDateString(),
+    reason: getNextCheckReason(flagPattern, hoursToNextCheck)
+  };
+}
+
+function getNextCheckReason(flagPattern, hours) {
+  if (flagPattern.patternDetected) {
+    if (!flagPattern.validTrade) {
+      if (flagPattern.fourHourAnalysis.bullishFlag.breakout?.detected || 
+          flagPattern.fourHourAnalysis.bearishFlag.breakout?.detected) {
+        return "Breakout detected - check back to see if a pullback occurs for entry";
+      } else {
+        return "Flag pattern forming - check back to monitor for potential breakout";
+      }
+    } else {
+      return "Valid trade setup detected - check back regularly to monitor or for new setups";
+    }
+  } else {
+    return "No flag pattern currently forming - check back later for potential setups";
   }
 }
 
@@ -105,54 +189,42 @@ function makeDecision(technical, news, economic) {
     return decision;
   }
 
-  // Get overall technical direction and confidence from multi-timeframe analysis
-  const technicalDirection = technical.overallDirection;
-  const technicalConfidence = technical.confidence;
+  // Check if we have a valid flag pattern
+  const flagPattern = technical.flagPattern;
   
-  // Calculate news score
-  let newsScore = 0;
-  if (news.sentiment === 'BULLISH') newsScore = 1;
-  if (news.sentiment === 'BEARISH') newsScore = -1;
-  if (news.sentiment === 'NEUTRAL') newsScore = 0;
-
-  // Determine if news aligns with technical
-  const newsAligns = (
-    (newsScore === 1 && technicalDirection === 'BUY') || 
-    (newsScore === -1 && technicalDirection === 'SELL') ||
-    (newsScore === 0) // Consider neutral news as non-conflicting
-  );
-  
-  // Potential confidence boost from news alignment
-  const newsBoost = newsAligns ? 5 : 0;
-  
-  // Final confidence calculation
-  decision.confidence = Math.min(85, technicalConfidence + newsBoost);
-
-  // Use 80% threshold for trading decisions
-  if (technicalDirection === 'BUY' && decision.confidence >= 80) {
+  if (flagPattern.patternDetected && flagPattern.validTrade) {
+    // We have a valid flag pattern with 20-pip SL and 60-pip TP
     decision.action = 'TRADE';
-    decision.direction = 'BUY';
-    decision.reasoning.push(`Multi-timeframe analysis shows bullish trend`);
-    decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
-    if (news.sentiment === 'BULLISH') decision.reasoning.push('News sentiment supports buying');
-    decision.reasoning.push(`Confidence level: ${decision.confidence}%`);
-  } else if (technicalDirection === 'SELL' && decision.confidence >= 80) {
-    decision.action = 'TRADE';
-    decision.direction = 'SELL';
-    decision.reasoning.push(`Multi-timeframe analysis shows bearish trend`);
-    decision.reasoning.push(`Timeframe alignment score: ${technical.alignmentScore}/5`);
-    if (news.sentiment === 'BEARISH') decision.reasoning.push('News sentiment supports selling');
-    decision.reasoning.push(`Confidence level: ${decision.confidence}%`);
-  } else {
-    decision.action = 'WAIT';
-    if (technicalDirection === 'NEUTRAL') {
-      decision.reasoning.push('No clear trend direction');
-    } else {
-      decision.reasoning.push(`Insufficient confidence for ${technicalDirection} signal`);
-    }
+    decision.direction = flagPattern.direction;
+    decision.confidence = flagPattern.patternQuality;
     
-    if (decision.confidence < 80) {
-      decision.reasoning.push(`Confidence below 80% threshold (current: ${decision.confidence}%)`);
+    // Add detailed reasoning about the flag pattern
+    decision.reasoning.push(`Flag pattern detected on 4-hour chart with pullback entry on 1-hour chart`);
+    decision.reasoning.push(`3-touch trendline rule confirmed`);
+    decision.reasoning.push(`Pattern direction: ${flagPattern.direction}`);
+    decision.reasoning.push(`Stop loss: ${flagPattern.stopLossPips} pips (within 20-pip limit)`);
+    decision.reasoning.push(`Take profit: ${flagPattern.takeProfitPips} pips (60 pips target)`);
+    decision.reasoning.push(`Risk-to-reward ratio: 1:3`);
+    
+    // Add news sentiment if it aligns with pattern
+    if ((news.sentiment === 'BULLISH' && flagPattern.direction === 'BUY') || 
+        (news.sentiment === 'BEARISH' && flagPattern.direction === 'SELL')) {
+      decision.reasoning.push(`News sentiment (${news.sentiment}) supports the pattern direction`);
+    }
+  } else {
+    // No valid flag pattern found
+    decision.action = 'WAIT';
+    
+    if (flagPattern.patternDetected) {
+      // Pattern detected but not valid for our risk parameters
+      decision.reasoning.push('Flag pattern detected but does not meet 20-pip SL / 60-pip TP criteria');
+      if (flagPattern.stopLossPips > 20) {
+        decision.reasoning.push(`Required stop loss (${flagPattern.stopLossPips} pips) exceeds maximum 20 pips`);
+      }
+    } else {
+      // No pattern detected
+      decision.reasoning.push('No flag pattern with pullback entry detected');
+      decision.reasoning.push('Waiting for valid flag pattern formation with 3-touch trendline confirmation');
     }
   }
 
@@ -161,19 +233,11 @@ function makeDecision(technical, news, economic) {
     decision.risks.push('Multiple economic events today - exercise caution');
   }
   
-  // Check for timeframe conflicts - updated for new timeframes
-  const timeframes = technical.timeframes;
-  if (timeframes.oneHour.direction !== timeframes.thirtyMin.direction) {
-    decision.risks.push('1-hour and 30-minute timeframes show conflicting signals');
-  }
-  if (timeframes.thirtyMin.direction !== timeframes.fifteenMin.direction) {
-    decision.risks.push('30-minute and 15-minute timeframes show conflicting signals');
-  }
-  
-  // Add risk if news and technical conflict
-  if ((technicalDirection === 'BUY' && news.sentiment === 'BEARISH') || 
-      (technicalDirection === 'SELL' && news.sentiment === 'BULLISH')) {
-    decision.risks.push('Technical and fundamental analysis conflict');
+  // Add risk if news and pattern direction conflict
+  if (flagPattern.patternDetected && 
+      ((flagPattern.direction === 'BUY' && news.sentiment === 'BEARISH') || 
+       (flagPattern.direction === 'SELL' && news.sentiment === 'BULLISH'))) {
+    decision.risks.push('Pattern direction and news sentiment conflict');
   }
   
   return decision;

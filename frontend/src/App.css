@@ -53,29 +53,31 @@ main {
 /* Currency Selector */
 .currency-selector {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
   margin: 20px 0;
-  flex-wrap: wrap;
 }
 
 .currency-selector button {
-  background-color: #e0e0e0;
+  background-color: #f5f5f5;
   color: #333;
   padding: 10px 15px;
-  border: none;
+  border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s;
+  font-weight: 500;
 }
 
 .currency-selector button:hover {
-  background-color: #d0d0d0;
+  background-color: #e0e0e0;
 }
 
 .currency-selector button.active {
   background-color: #1976d2;
   color: white;
+  border-color: #1976d2;
 }
 
 .controls {
@@ -209,65 +211,6 @@ button:disabled {
   margin-top: 20px;
 }
 
-.indicators-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.indicator-card {
-  background: #f5f5f5;
-  padding: 10px;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.indicator-card h4 {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.indicator-card .value {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* Enhanced indicator display for new indicators */
-.indicator-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.indicator-section h4 {
-  color: #1976d2;
-  margin-bottom: 10px;
-}
-
-.indicator-details {
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 14px;
-}
-
-.signal-list {
-  list-style: none;
-  padding: 0;
-}
-
-.signal-list li {
-  padding: 8px;
-  margin-bottom: 5px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
 .news-list {
   max-height: 400px;
   overflow-y: auto;
@@ -305,19 +248,11 @@ button:disabled {
   font-weight: bold;
 }
 
-/* Updated sentiment colors for all currencies */
-.sentiment.BULLISH,
-.sentiment.EUR_POSITIVE,
-.sentiment.GBP_POSITIVE,
-.sentiment.AUD_POSITIVE,
-.sentiment.NZD_POSITIVE,
-.sentiment.JPY_POSITIVE,
-.sentiment.ZAR_POSITIVE { 
+.sentiment.BULLISH {
   color: #2e7d32; 
 }
 
-.sentiment.BEARISH,
-.sentiment.USD_POSITIVE {
+.sentiment.BEARISH {
   color: #c62828;
 }
 
@@ -479,63 +414,31 @@ button:disabled {
   margin-bottom: 5px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .analysis-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .indicators-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .position-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .controls {
-    flex-direction: column;
-  }
-  
-  .controls button {
-    width: 100%;
-  }
-  
-  .currency-selector {
-    flex-direction: column;
-  }
-  
-  .currency-selector button {
-    width: 100%;
-  }
-  
-  .settings-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .form-buttons {
-    justify-content: center;
-  }
+/* Flag Pattern Analysis Styles */
+.flag-pattern-info {
+  background: #e3f2fd;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid #1976d2;
 }
 
-/* Multi-timeframe analysis styles */
-.timeframe-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 15px 0;
+.flag-status {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  margin-top: 15px;
 }
 
-.timeframe-table th,
-.timeframe-table td {
-  padding: 10px;
-  border: 1px solid #e0e0e0;
-  text-align: center;
+.flag-status p {
+  margin-bottom: 8px;
 }
 
-.timeframe-table th {
-  background-color: #f5f5f5;
-  font-weight: bold;
+.no-pattern-info {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
 }
 
 .timeframe-insights {
@@ -559,21 +462,7 @@ button:disabled {
   border-radius: 4px;
 }
 
-.timeframe-insights li.warning {
-  background: #fff3e0;
-  border-left: 4px solid #f57c00;
-}
-
-.timeframe-insights li.strong {
-  background: #e8f5e9;
-  border-left: 4px solid #2e7d32;
-}
-
-.multi-timeframe-container {
-  grid-column: 1 / -1;
-}
-
-/* Add these styles for trade setup prices */
+/* Trade Price Styles */
 .trade-prices {
   margin: 20px 0;
   padding: 15px;
@@ -619,8 +508,113 @@ button:disabled {
   background-color: #e3f2fd;
 }
 
+/* Candlestick Chart Styles */
+.timeframe-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.timeframe-selector button {
+  padding: 8px 16px;
+  margin: 0 5px;
+  border: none;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.timeframe-selector button.active {
+  background-color: #1976d2;
+  color: white;
+}
+
+.candlestick-chart {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: white;
+}
+
+.chart-placeholder {
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  font-style: italic;
+  color: #666;
+}
+
+.pattern-info {
+  border-left: 4px solid #1976d2;
+}
+
+.App-footer {
+  margin-top: 40px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+  .analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .position-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls {
+    flex-direction: column;
+  }
+  
+  .controls button {
+    width: 100%;
+  }
+  
+  .settings-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-buttons {
+    justify-content: center;
+  }
+  
   .trade-prices-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Next Check Panel Styles */
+.next-check-panel {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.next-check-panel h3 {
+  color: #1976d2;
+  margin-bottom: 15px;
+}
+
+.next-check-info {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #1976d2;
+}
+
+.next-check-info p {
+  margin-bottom: 10px;
 }

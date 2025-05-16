@@ -1,6 +1,6 @@
 const { getPipValue } = require('./priceDataService');
 
-function calculatePosition(accountBalanceGBP, targetProfitGBP, currentPrice, currencyPair) {
+function calculatePosition(accountBalanceGBP, targetProfitGBP, currentPrice, currencyPair, direction = null) {
   const [baseCurrency, quoteCurrency] = currencyPair.split('/');
   
   // Fixed values for our strategy
@@ -52,16 +52,9 @@ function calculatePosition(accountBalanceGBP, targetProfitGBP, currentPrice, cur
     projectedProfit: projectedProfit,
     riskRewardRatio: takeProfitPips / stopLossPips,
     entryPrice: entryPrice,
-    buySetup: {
-      entry: entryPrice,
-      stopLoss: buyStopLossPrice,
-      takeProfit: buyTakeProfitPrice
-    },
-    sellSetup: {
-      entry: entryPrice,
-      stopLoss: sellStopLossPrice,
-      takeProfit: sellTakeProfitPrice
-    }
+    stopLossPrice: direction === 'BUY' ? buyStopLossPrice : sellStopLossPrice,
+    takeProfitPrice: direction === 'BUY' ? buyTakeProfitPrice : sellTakeProfitPrice,
+    direction: direction
   };
 }
 
@@ -92,5 +85,6 @@ function validateTarget(accountBalance, targetProfit) {
 
 module.exports = {
   calculatePosition,
-  validateTarget
+  validateTarget,
+  determineStandardLotSize
 };

@@ -3,9 +3,6 @@ import React from 'react';
 const PositionSizing = ({ positionData, decision }) => {
   if (!positionData || decision !== 'TRADE') return null;
 
-  // Select the appropriate setup based on trade direction
-  const tradeSetup = positionData.direction === 'BUY' ? positionData.buySetup : positionData.sellSetup;
-
   return (
     <div className="position-sizing">
       <h3>Position Sizing & Trade Setup for {positionData.currencyPair}</h3>
@@ -18,9 +15,9 @@ const PositionSizing = ({ positionData, decision }) => {
         
         <div className="position-card">
           <h4>Trade Targets</h4>
-          <p>Target profit: £{positionData.targetProfit.toFixed(2)}</p>
-          <p>Required pips: {positionData.takeProfitPips}</p>
-          <p>Projected profit: £{positionData.projectedProfit.toFixed(2)}</p>
+          <p>Risk: £{positionData.riskPerTrade.toFixed(2)}</p>
+          <p>Reward: £{positionData.projectedProfit.toFixed(2)}</p>
+          <p>R:R Ratio: 1:3</p>
         </div>
         
         <div className="position-card">
@@ -29,13 +26,6 @@ const PositionSizing = ({ positionData, decision }) => {
           <p>Stop loss: {positionData.stopLossPips} pips</p>
           <p>Take profit: {positionData.takeProfitPips} pips</p>
         </div>
-        
-        <div className="position-card">
-          <h4>Risk/Reward</h4>
-          <p>Risk: £{positionData.riskPerTrade.toFixed(2)}</p>
-          <p>Reward: £{positionData.targetProfit.toFixed(2)}</p>
-          <p>R:R Ratio: 1:{positionData.riskRewardRatio.toFixed(1)}</p>
-        </div>
       </div>
       
       <div className="trade-prices">
@@ -43,15 +33,15 @@ const PositionSizing = ({ positionData, decision }) => {
         <div className="trade-prices-grid">
           <div className="price-card entry">
             <strong>Entry Price:</strong>
-            <span>{tradeSetup.entry}</span>
+            <span>{positionData.entryPrice}</span>
           </div>
           <div className="price-card stop-loss">
             <strong>Stop Loss Price:</strong>
-            <span>{tradeSetup.stopLoss}</span>
+            <span>{positionData.stopLossPrice}</span>
           </div>
           <div className="price-card take-profit">
             <strong>Take Profit Price:</strong>
-            <span>{tradeSetup.takeProfit}</span>
+            <span>{positionData.takeProfitPrice}</span>
           </div>
         </div>
       </div>
@@ -63,9 +53,9 @@ const PositionSizing = ({ positionData, decision }) => {
           <li>Set order type: Market Order</li>
           <li>Direction: {positionData.direction}</li>
           <li>Volume: {positionData.recommendedLotSize} lots</li>
-          <li>Entry Price: {tradeSetup.entry}</li>
-          <li>Stop Loss: {tradeSetup.stopLoss}</li>
-          <li>Take Profit: {tradeSetup.takeProfit}</li>
+          <li>Entry Price: {positionData.entryPrice}</li>
+          <li>Stop Loss: {positionData.stopLossPrice}</li>
+          <li>Take Profit: {positionData.takeProfitPrice}</li>
         </ol>
       </div>
     </div>

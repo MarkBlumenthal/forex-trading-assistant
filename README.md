@@ -1,32 +1,46 @@
-Forex Trading Assistant
-A comprehensive multi-currency trading analysis tool that combines technical indicators, news sentiment, and economic calendar data to provide trading decisions for 7 major forex pairs. The system works 24/5 and can be used at any time during forex market hours.
+Forex Flag Pattern Trader
+A specialized forex trading tool that identifies flag pattern breakouts with pullback entries across 10 major currency pairs. The system provides precise entry, stop loss, and take profit levels based on a strict 3:1 reward-to-risk ratio.
 Features
 
-Multi-Currency Support: Analyze EUR/USD, GBP/USD, AUD/USD, NZD/USD, GBP/JPY, USD/ZAR, EUR/GBP
-Real-time Market Analysis: Analyze any currency pair at any time of day
-Multi-Timeframe Analysis: Analyzes Daily, 4-Hour, 1-Hour timeframes for trend identification, with 15-minute for entries
-15+ Technical Indicators: RSI, MACD, Bollinger Bands, Moving Averages, ATR, ADX, CCI, Williams %R, Stochastic, MFI, Parabolic SAR, and more
-News Sentiment Analysis: Aggregates and analyzes news from multiple financial sources with currency-specific filtering
+Multi-Currency Support: Analyze EUR/USD, USD/JPY, GBP/USD, AUD/USD, NZD/USD, EUR/GBP, USD/CHF, EUR/JPY, USD/CAD, GBP/JPY
+Flag Pattern Recognition: Identifies bullish and bearish flag patterns with pullback entries
+3-Touch Trendline Rule: Confirms patterns with at least 3 touches of the trendline
+Multi-Timeframe Analysis:
+
+4-Hour timeframe: Pattern identification and overall trend
+1-Hour timeframe: Entry timing and precise levels
+
+
+Fixed Risk Management:
+
+20-pip stop loss maximum
+60-pip take profit target
+3:1 reward-to-risk ratio
+
+
+News Sentiment Analysis: Aggregates and analyzes news from multiple financial sources
 Economic Calendar Integration: Tracks high-impact events that affect trading
-Position Sizing Calculator: Calculates lot sizes, stop losses, and take profits based on your target profit per trade
-Risk Management: Built-in 2% risk per trade with automatic position sizing
-80% Confidence Threshold: Only recommends trades with high probability setups
+Position Sizing Calculator: Calculates lot sizes based on 2% risk per trade
+Automatic Lot Size Scaling: Increases lot size as account grows (0.1 lots per £1000)
 
 Supported Currency Pairs
 
 EUR/USD (Euro/US Dollar)
+USD/JPY (US Dollar/Japanese Yen)
 GBP/USD (British Pound/US Dollar)
 AUD/USD (Australian Dollar/US Dollar)
 NZD/USD (New Zealand Dollar/US Dollar)
-GBP/JPY (British Pound/Japanese Yen)
-USD/ZAR (US Dollar/South African Rand)
 EUR/GBP (Euro/British Pound)
+USD/CHF (US Dollar/Swiss Franc)
+EUR/JPY (Euro/Japanese Yen)
+USD/CAD (US Dollar/Canadian Dollar)
+GBP/JPY (British Pound/Japanese Yen)
 
 Tech Stack
 
 Backend: Node.js, Express
-Frontend: React 19
-Charts: Recharts
+Frontend: React
+Charts: Recharts (candlestick visualization)
 APIs:
 
 Twelve Data (forex prices)
@@ -34,159 +48,115 @@ Multiple RSS feeds (news)
 Economic calendars
 
 
-Technical Analysis: technicalindicators library
+Pattern Recognition: Custom flag pattern detection with 3-touch rule validation
 
 Installation
-
 Clone the repository:
-
 bashgit clone <repository-url>
-cd forex-trading-assistant
-
+cd forex-flag-trader
 Install backend dependencies:
-
 bashcd backend
 npm install
-
 Install frontend dependencies:
-
 bashcd ../frontend
 npm install --legacy-peer-deps
-
 Set up environment variables:
 
 Create a .env file in the backend directory
 Add your API keys:
 
-
-
 PORT=5000
 TWELVE_DATA_API_KEY=your_twelve_data_api_key_here
 TIMEZONE=Asia/Jerusalem
 
-Get API keys:
-
-Sign up for a free Twelve Data account at https://twelvedata.com/
-Add your API key to the .env file
-
-
+Get API keys: Sign up for a free Twelve Data account at https://twelvedata.com/
 
 Usage
 Starting the Application
-
 Start the backend server:
-
 bashcd backend
 npm run dev
-
 Start the frontend (in a new terminal):
-
 bashcd frontend
 npm start
-
 Open your browser to http://localhost:3000
-
 Using the System
 
-Select Currency Pair: Click on any of the 7 available pairs
+Select Currency Pair: Click on any of the 10 available pairs
 Analyze: Click "Analyze [Pair] Now" for current market conditions
-Account Settings: Set your account balance and profit target (default £50 per trade)
+Account Settings: Set your account balance (default £1000)
 Trading Decision: System will show:
 
 BUY/SELL/WAIT decision
-Confidence level (must be ≥80% to trade)
+Flag pattern details (if detected)
+Entry, stop loss, and take profit levels
 Position sizing calculations
-Stop loss and take profit levels (in pips)
-Exact lot size to trade
-Risk/Reward ratio
+Risk/Reward ratio (fixed at 3:1)
 
 
 
-Multi-Timeframe Analysis
-The system analyzes four timeframes for each currency pair:
+Flag Pattern Strategy
+The system identifies flag patterns using these criteria:
 
-Daily timeframe: Identifies long-term trend direction
-4-Hour timeframe: Confirms intermediate trend strength
-1-Hour timeframe: Shows near-term momentum
-15-Minute timeframe: Used for precise entry timing
+Flag Pole: Strong directional move in price (bullish or bearish)
+Consolidation: Price consolidates against the trend, forming a flag
+Trendline Validation: Requires at least 3 touches of the trendline
+Breakout: Price breaks out from the flag in the original trend direction
+Pullback Entry: Waits for a pullback to the breakout level for entry
+Fixed Risk Parameters: Only takes trades with 20-pip stop loss and 60-pip take profit
 
-Decisions are weighted by timeframe importance, with higher weighting given to larger timeframes. The system calculates a timeframe alignment score, showing how well the different timeframes agree with each other.
-Position Sizing Example
-For a £1,000 account with £50 profit target:
+Position Sizing
+When a flag pattern trade is identified, the system calculates:
 
-Risk: £20 (2% of account)
-Stop Loss: 10 pips
-Take Profit: Calculated to achieve £50 profit
-Lot Size: Automatically calculated based on currency pair
+Risk Amount: 2% of account balance
+Lot Size: Based on risk amount and fixed 20-pip stop loss
+Standard Lot Size: Uses 0.1 lots per £1000 in account balance
+Take Profit: Fixed at 60 pips (3x the stop loss)
+MT4 Instructions: Provides exact entry, stop loss, and take profit prices
 
 Trading Schedule
 
-24/5 Operation: Works anytime forex markets are open
-Automatic Analysis: Scheduled for 9:30 AM Israel time for all pairs
-Manual Analysis: Available anytime via "Analyze Now" button
+## Real-Time Analysis & Next Check Recommendations
 
-Trading Decision Logic
-The system only recommends trades when:
-
-Technical indicators across multiple timeframes align in the same direction
-News sentiment supports the technical direction
-Confidence level is 80% or higher
-No high-impact economic events are imminent
-Market conditions are favorable
-
-Position Sizing
-When a trade is recommended, the system calculates:
-
-Lot Size: Based on 2% risk and currency pair pip value
-Stop Loss: Conservative 10 pip default
-Take Profit: Calculated to achieve your target profit
-Required Pips: How many pips needed to reach target profit
-Risk/Reward Ratio: Automatic calculation
-MT4 Instructions: Step-by-step setup guide
+- **24/5 Operation**: Works anytime forex markets are open
+- **On-Demand Analysis**: Analyze any pair with real-time data when you need it
+- **Smart Next Check Recommendations**: The system suggests when to check back based on the current pattern status:
+  - 1 hour if a breakout has occurred (waiting for pullback)
+  - 2 hours if consolidation is detected (waiting for breakout)
+  - 1 hour if a valid trade setup is found (for monitoring)
+  - 4 hours if no pattern is forming (default)
+- **Context-Aware Reasoning**: Explains why you should check back at the suggested time
 
 Project Structure
-forex-trading-assistant/
+forex-flag-trader/
 ├── backend/
 │   ├── src/
 │   │   ├── services/
 │   │   │   ├── priceDataService.js         # Forex price data fetching
-│   │   │   ├── technicalAnalysisService.js # 15+ technical indicators
-│   │   │   ├── newsAnalysisService.js      # Multi-source news sentiment
+│   │   │   ├── patternRecognition.js       # Flag pattern detection
+│   │   │   ├── technicalAnalysisService.js # Pattern analysis
+│   │   │   ├── newsAnalysisService.js      # News sentiment analysis
 │   │   │   ├── economicCalendarService.js  # Economic events tracking
 │   │   │   ├── positionCalculator.js       # Position sizing logic
 │   │   │   └── analysisEngine.js           # Main decision engine
-│   │   ├── config/
-│   │   │   └── apiConfig.js               # API configurations
-│   │   ├── utils/
-│   │   │   └── helpers.js                 # Utility functions
-│   │   └── index.js                       # Express server
-│   ├── .env                               # Environment variables
+│   │   └── index.js                        # Express server
+│   ├── .env                                # Environment variables
 │   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Dashboard.js               # Main dashboard
-│   │   │   ├── PriceChart.js              # Live price chart
-│   │   │   ├── TechnicalIndicators.js     # All indicators display
-│   │   │   ├── MultiTimeframeAnalysis.js  # Timeframe alignment display
-│   │   │   ├── NewsSection.js             # News feed & sentiment
-│   │   │   ├── EconomicCalendar.js        # Economic events
-│   │   │   ├── PositionSizing.js          # Trade calculations
-│   │   │   └── AccountSettings.js         # Account configuration
-│   │   ├── App.js                         # Main app component
-│   │   ├── App.css                        # Styles
-│   │   └── index.js                       # Entry point
+│   │   │   ├── Dashboard.js                # Main dashboard
+│   │   │   ├── PriceChart.js               # Candlestick chart with pattern visualization
+│   │   │   ├── MultiTimeframeAnalysis.js   # Flag pattern display
+│   │   │   ├── NewsSection.js              # News feed & sentiment
+│   │   │   ├── EconomicCalendar.js         # Economic events
+│   │   │   ├── PositionSizing.js           # Trade calculations
+│   │   │   └── AccountSettings.js          # Account configuration
+│   │   ├── App.js                          # Main app component
+│   │   ├── App.css                         # Styles
+│   │   └── index.js                        # Entry point
 │   └── package.json
 └── README.md
-Technical Indicators Used
-
-Trend: SMA (20, 50, 200), EMA (9, 21)
-Momentum: RSI, Stochastic, CCI, Williams %R
-Volatility: Bollinger Bands, ATR
-Trend Strength: ADX
-Volume: MFI, OBV
-Trend Reversal: MACD, Parabolic SAR
-
 News Sources
 
 Bloomberg Markets
@@ -200,11 +170,10 @@ TradingView
 Risk Management
 
 2% Risk Rule: Never risk more than 2% per trade
-Position Sizing: Automatic calculation based on stop loss
-80% Confidence: High threshold for trade signals
-Risk Warnings: Alerts for unrealistic profit targets
-Stop Loss: Always calculated and displayed
-Profit Target: Customizable per trade (default 5% on £1,000 account)
+Fixed Stop Loss: Maximum 20 pips
+Fixed Take Profit: 60 pips
+Risk-Reward Ratio: Fixed at 1:3
+Lot Size Scaling: Increases with account growth
 
 Important Notes
 
@@ -212,46 +181,15 @@ This tool provides analysis but doesn't guarantee profits
 Past performance doesn't indicate future results
 Forex trading involves significant risk
 Always use proper risk management
-The system requires 80% confidence to recommend trades
+The system only takes trades that fit our strict criteria
 Most signals will be "WAIT" - this is intentional for safety
 Currency-specific pip values are automatically calculated
-
-Common Issues & Solutions
-No position sizing shown:
-
-Only appears when system recommends a trade (BUY/SELL)
-WAIT decisions don't show position sizing
-
-Low confidence readings:
-
-Normal during consolidation or mixed signals
-System is designed to be conservative
-
-News feed errors:
-
-Some RSS feeds may be temporarily down
-System continues with available sources
-
-Weekend operation:
-
-Shows Friday's closing data
-Economic calendar empty
-May have lower confidence due to stale data
 
 Best Practices
 
 Start Small: Begin with minimum position sizes
 Paper Trade First: Test the system without real money
-Follow the System: Don't override the 80% threshold
+Follow the System: Don't override the trade criteria
 Risk Management: Stick to 2% risk per trade
 Multiple Pairs: Monitor all currency pairs for opportunities
-Realistic Targets: Default £50 per trade is sustainable (5% return)
-
-MT4 Integration
-The system provides exact instructions for MT4:
-
-Currency pair to trade
-Trade direction (Buy/Sell)
-Lot size calculation
-Stop loss in pips
-Take profit in pips
+Be Patient: Flag patterns with pullback entries are high-quality but rare setups

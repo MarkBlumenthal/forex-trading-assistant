@@ -86,9 +86,9 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Forex Trading Assistant</h1>
+        <h1>Forex Flag Pattern Trader</h1>
         <div className="header-info">
-          <span>Multi-Currency Analysis</span>
+          <span>Multi-Currency Flag Pattern Analysis</span>
           {lastUpdate && <span>Last Update: {lastUpdate}</span>}
         </div>
       </header>
@@ -134,6 +134,10 @@ function App() {
           </div>
         )}
       </main>
+      
+      <footer className="App-footer">
+        <p>Flag Pattern Strategy: 4H & 1H Analysis | 3-Touch Trendline Rule | 20-pip SL | 60-pip TP | 3:1 RR</p>
+      </footer>
     </div>
   );
 }

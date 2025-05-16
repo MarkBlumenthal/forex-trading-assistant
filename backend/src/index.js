@@ -17,7 +17,7 @@ app.use(express.json());
 // Store latest analysis for each currency pair
 let analysisCache = {};
 
-// Default account settings - now with £50 target per trade
+// Default account settings
 let defaultAccountSettings = {
   accountBalance: 1000,  // £1000
   targetProfit: 50       // £50 per trade (5% return)
@@ -25,7 +25,19 @@ let defaultAccountSettings = {
 
 // API endpoint to get available currency pairs
 app.get('/api/currency-pairs', (req, res) => {
-  const pairs = ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD', 'GBP/JPY', 'USD/ZAR', 'EUR/GBP'];
+  // Updated currency pairs list
+  const pairs = [
+    'EUR/USD', 
+    'USD/JPY', 
+    'GBP/USD', 
+    'AUD/USD', 
+    'NZD/USD', 
+    'EUR/GBP', 
+    'USD/CHF', 
+    'EUR/JPY', 
+    'USD/CAD', 
+    'GBP/JPY'
+  ];
   res.json(pairs);
 });
 
@@ -75,39 +87,9 @@ app.post('/api/account-settings', (req, res) => {
   }
 });
 
-// Simple scheduler that checks every minute
-function scheduleAnalysis() {
-  setInterval(async () => {
-    const now = new Date();
-    const israelTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Jerusalem"}));
-    const hours = israelTime.getHours();
-    const minutes = israelTime.getMinutes();
-    const day = israelTime.getDay();
-    
-    // Run at 9:30 AM on weekdays (Monday = 1, Friday = 5)
-    if (hours === 9 && minutes === 30 && day >= 1 && day <= 5) {
-      console.log('Running scheduled analysis...');
-      try {
-        // Run analysis for all currency pairs
-        const pairs = ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD', 'GBP/JPY', 'USD/ZAR', 'EUR/GBP'];
-        for (const pair of pairs) {
-          const analysis = await runAnalysis(pair, 'current', defaultAccountSettings);
-          analysisCache[pair] = analysis;
-          console.log(`Completed analysis for ${pair}`);
-        }
-      } catch (error) {
-        console.error('Scheduled analysis error:', error);
-      }
-    }
-  }, 60000); // Check every minute
-}
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Analysis scheduled for 9:30 AM Israel time on weekdays');
-  
-  // Start the scheduler
-  scheduleAnalysis();
+  console.log('Real-time analysis available - click "Analyze Now" button to check any pair');
   
   // Show current time for debugging
   const now = new Date();
