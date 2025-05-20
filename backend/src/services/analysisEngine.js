@@ -2,7 +2,7 @@ const { getMultiTimeframeData } = require('./priceDataService');
 const { analyzeMultiTimeframe } = require('./technicalAnalysisService');
 const { getMarketNews } = require('./newsAnalysisService');
 const { getEconomicCalendar } = require('./economicCalendarService');
-const { calculatePosition, validateTarget, determineStandardLotSize } = require('./positionCalculator');
+const { calculatePosition, validateTarget, determineStandardLotSize, calculateSpread } = require('./positionCalculator');
 
 async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', accountSettings = null) {
   console.log(`Starting flag pattern analysis for ${currencyPair}...`);
@@ -26,10 +26,13 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
     console.log('Checking economic calendar...');
     const economicCalendar = await getEconomicCalendar(currencyPair);
     
-    // 5. Make final decision
+    // 5. Calculate spread for this currency pair
+    const currentSpread = calculateSpread(currencyPair, new Date());
+    
+    // 6. Make final decision
     const decision = makeDecision(technicalAnalysis, newsAnalysis, economicCalendar);
     
-    // 6. Calculate position sizing if account settings provided
+    // 7. Calculate position sizing if account settings provided
     let positionSizing = null;
     let targetValidation = null;
     
@@ -39,24 +42,22 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       
       // If we have a valid flag pattern, use its entry, SL and TP
       if (technicalAnalysis.flagPattern.validTrade) {
-        positionSizing = {
-          accountBalance: accountSettings.accountBalance,
-          targetProfit: accountSettings.targetProfit,
-          riskPerTrade: accountSettings.accountBalance * 0.02, // 2% risk
-          recommendedLotSize: determineStandardLotSize(accountSettings.accountBalance),
-          stopLossPips: technicalAnalysis.flagPattern.stopLossPips,
-          takeProfitPips: technicalAnalysis.flagPattern.takeProfitPips,
-          maxRiskPercent: 2,
-          currencyPair: currencyPair,
-          entryPrice: technicalAnalysis.flagPattern.entry,
-          stopLossPrice: technicalAnalysis.flagPattern.stopLoss,
-          takeProfitPrice: technicalAnalysis.flagPattern.takeProfit,
-          direction: technicalAnalysis.flagPattern.direction,
-          riskRewardRatio: 3, // Fixed 3:1 ratio
-          // Calculate projected profit in currency
-          projectedProfit: (accountSettings.accountBalance * 0.02) * 3, // 2% risk * 3 (RR ratio)
-          valid: true
-        };
+        positionSizing = calculatePosition(
+          accountSettings.accountBalance,
+          2, // 2% risk
+          technicalAnalysis.flagPattern.stopLossPips,
+          currentPrice,
+          currencyPair,
+          technicalAnalysis.flagPattern.direction,
+          currentSpread // Pass the spread
+        );
+        
+        // Update the flag pattern with spread-adjusted values
+        technicalAnalysis.flagPattern.entry = positionSizing.entryPrice;
+        technicalAnalysis.flagPattern.stopLoss = positionSizing.stopLossPrice;
+        technicalAnalysis.flagPattern.takeProfit = positionSizing.takeProfitPrice;
+        technicalAnalysis.flagPattern.trueRiskRewardRatio = positionSizing.trueRiskRewardRatio;
+        technicalAnalysis.flagPattern.spreadPips = currentSpread;
       } else {
         // No valid flag pattern, so no position sizing
         positionSizing = null;
@@ -64,7 +65,7 @@ async function runAnalysis(currencyPair = 'EUR/USD', timeframe = 'current', acco
       
       targetValidation = {
         isRealistic: true,
-        profitPercent: 6, // 2% risk * 3 = 6% reward
+        profitPercent: 4, // 2% risk * 2 = 4% reward
         warning: null,
         recommendation: null
       };
@@ -193,7 +194,7 @@ function makeDecision(technical, news, economic) {
   const flagPattern = technical.flagPattern;
   
   if (flagPattern.patternDetected && flagPattern.validTrade) {
-    // We have a valid flag pattern with 20-pip SL and 60-pip TP
+    // We have a valid flag pattern with appropriate SL and TP (2:1 ratio)
     decision.action = 'TRADE';
     decision.direction = flagPattern.direction;
     decision.confidence = flagPattern.patternQuality;
@@ -202,9 +203,11 @@ function makeDecision(technical, news, economic) {
     decision.reasoning.push(`Flag pattern detected on 4-hour chart with pullback entry on 1-hour chart`);
     decision.reasoning.push(`3-touch trendline rule confirmed`);
     decision.reasoning.push(`Pattern direction: ${flagPattern.direction}`);
-    decision.reasoning.push(`Stop loss: ${flagPattern.stopLossPips} pips (within 20-pip limit)`);
-    decision.reasoning.push(`Take profit: ${flagPattern.takeProfitPips} pips (60 pips target)`);
-    decision.reasoning.push(`Risk-to-reward ratio: 1:3`);
+    decision.reasoning.push(`Stop loss: ${flagPattern.stopLossPips} pips`);
+    decision.reasoning.push(`Take profit: ${flagPattern.takeProfitPips} pips (2:1 target ratio)`);
+    if (flagPattern.trueRiskRewardRatio) {
+      decision.reasoning.push(`True risk-reward ratio after spread: 1:${flagPattern.trueRiskRewardRatio}`);
+    }
     
     // Add news sentiment if it aligns with pattern
     if ((news.sentiment === 'BULLISH' && flagPattern.direction === 'BUY') || 
@@ -217,9 +220,9 @@ function makeDecision(technical, news, economic) {
     
     if (flagPattern.patternDetected) {
       // Pattern detected but not valid for our risk parameters
-      decision.reasoning.push('Flag pattern detected but does not meet 20-pip SL / 60-pip TP criteria');
-      if (flagPattern.stopLossPips > 20) {
-        decision.reasoning.push(`Required stop loss (${flagPattern.stopLossPips} pips) exceeds maximum 20 pips`);
+      decision.reasoning.push('Flag pattern detected but does not meet trading criteria');
+      if (flagPattern.stopLossPips < 10 || flagPattern.stopLossPips > 50) {
+        decision.reasoning.push(`Required stop loss (${flagPattern.stopLossPips} pips) outside acceptable range of 10-50 pips`);
       }
     } else {
       // No pattern detected

@@ -1,5 +1,5 @@
 Forex Flag Pattern Trader
-A specialized forex trading tool that identifies flag pattern breakouts with pullback entries across 10 major currency pairs. The system provides precise entry, stop loss, and take profit levels based on a strict 3:1 reward-to-risk ratio.
+A specialized forex trading tool that identifies flag pattern breakouts with pullback entries across 10 major currency pairs. The system provides precise entry, stop loss, and take profit levels based on a strict 2:1 reward-to-risk ratio while accounting for broker spreads.
 Features
 
 Multi-Currency Support: Analyze EUR/USD, USD/JPY, GBP/USD, AUD/USD, NZD/USD, EUR/GBP, USD/CHF, EUR/JPY, USD/CAD, GBP/JPY
@@ -11,11 +11,19 @@ Multi-Timeframe Analysis:
 1-Hour timeframe: Entry timing and precise levels
 
 
-Fixed Risk Management:
+Adaptive Risk Management:
 
-20-pip stop loss maximum
-60-pip take profit target
-3:1 reward-to-risk ratio
+2% risk per trade
+10-50 pip stop loss range
+2:1 reward-to-risk ratio
+Spread-adjusted calculations for true risk/reward ratio
+
+
+Spread Integration:
+
+Currency-specific spread calculations
+Time-of-day spread adjustments (lower during high liquidity, higher during off hours)
+Accurate entry, stop loss, and take profit calculations that account for spread costs
 
 
 News Sentiment Analysis: Aggregates and analyzes news from multiple financial sources
@@ -40,7 +48,7 @@ Tech Stack
 
 Backend: Node.js, Express
 Frontend: React
-Charts: Recharts (candlestick visualization)
+Charts: ApexCharts (professional candlestick visualization)
 APIs:
 
 Twelve Data (forex prices)
@@ -68,9 +76,7 @@ Add your API keys:
 PORT=5000
 TWELVE_DATA_API_KEY=your_twelve_data_api_key_here
 TIMEZONE=Asia/Jerusalem
-
 Get API keys: Sign up for a free Twelve Data account at https://twelvedata.com/
-
 Usage
 Starting the Application
 Start the backend server:
@@ -89,9 +95,9 @@ Trading Decision: System will show:
 
 BUY/SELL/WAIT decision
 Flag pattern details (if detected)
-Entry, stop loss, and take profit levels
+Entry, stop loss, and take profit levels (adjusted for spread)
 Position sizing calculations
-Risk/Reward ratio (fixed at 3:1)
+Risk/Reward ratio (target 2:1, showing actual ratio after spread)
 
 
 
@@ -103,29 +109,31 @@ Consolidation: Price consolidates against the trend, forming a flag
 Trendline Validation: Requires at least 3 touches of the trendline
 Breakout: Price breaks out from the flag in the original trend direction
 Pullback Entry: Waits for a pullback to the breakout level for entry
-Fixed Risk Parameters: Only takes trades with 20-pip stop loss and 60-pip take profit
+Adaptive Risk Parameters: Stop loss range 10-50 pips, take profit at 2× the stop loss distance
 
 Position Sizing
 When a flag pattern trade is identified, the system calculates:
 
 Risk Amount: 2% of account balance
-Lot Size: Based on risk amount and fixed 20-pip stop loss
+Lot Size: Based on risk amount and stop loss distance
 Standard Lot Size: Uses 0.1 lots per £1000 in account balance
-Take Profit: Fixed at 60 pips (3x the stop loss)
+Take Profit: 2× the stop loss distance
+Spread Adjustment: Entry, stop loss, and take profit prices account for broker spread
 MT4 Instructions: Provides exact entry, stop loss, and take profit prices
 
-Trading Schedule
+Real-Time Analysis & Next Check Recommendations
 
-## Real-Time Analysis & Next Check Recommendations
+24/5 Operation: Works anytime forex markets are open
+On-Demand Analysis: Analyze any pair with real-time data when you need it
+Smart Next Check Recommendations: The system suggests when to check back based on the current pattern status:
 
-- **24/5 Operation**: Works anytime forex markets are open
-- **On-Demand Analysis**: Analyze any pair with real-time data when you need it
-- **Smart Next Check Recommendations**: The system suggests when to check back based on the current pattern status:
-  - 1 hour if a breakout has occurred (waiting for pullback)
-  - 2 hours if consolidation is detected (waiting for breakout)
-  - 1 hour if a valid trade setup is found (for monitoring)
-  - 4 hours if no pattern is forming (default)
-- **Context-Aware Reasoning**: Explains why you should check back at the suggested time
+1 hour if a breakout has occurred (waiting for pullback)
+2 hours if consolidation is detected (waiting for breakout)
+1 hour if a valid trade setup is found (for monitoring)
+4 hours if no pattern is forming (default)
+
+
+Context-Aware Reasoning: Explains why you should check back at the suggested time
 
 Project Structure
 forex-flag-trader/
@@ -170,10 +178,11 @@ TradingView
 Risk Management
 
 2% Risk Rule: Never risk more than 2% per trade
-Fixed Stop Loss: Maximum 20 pips
-Fixed Take Profit: 60 pips
-Risk-Reward Ratio: Fixed at 1:3
+Adaptive Stop Loss: 10-50 pip range based on pattern structure
+Target Take Profit: 2× the stop loss distance
+Risk-Reward Ratio: Target 2:1 (shows actual ratio after spread)
 Lot Size Scaling: Increases with account growth
+Spread Consideration: All calculations account for broker spread costs
 
 Important Notes
 
@@ -183,7 +192,8 @@ Forex trading involves significant risk
 Always use proper risk management
 The system only takes trades that fit our strict criteria
 Most signals will be "WAIT" - this is intentional for safety
-Currency-specific pip values are automatically calculated
+Currency-specific pip values and spreads are automatically calculated
+Spread calculations adjust based on time of day (wider during Asian session, tighter during London/NY overlap)
 
 Best Practices
 

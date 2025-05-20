@@ -41,8 +41,8 @@ function detectBullishFlag(priceData, lookbackPeriod = 30) {
     // Stop loss is below the lowest point of the consolidation
     stopLoss = consolidation.lowestLow;
     
-    // Take profit is entry + (entry - stopLoss) * 3 (3:1 reward-to-risk ratio)
-    takeProfit = entry + (entry - stopLoss) * 3;
+    // Take profit is entry + (entry - stopLoss) * 2 (2:1 reward-to-risk ratio)
+    takeProfit = entry + (entry - stopLoss) * 2;
   }
   
   // Calculate pip distances
@@ -70,7 +70,7 @@ function detectBullishFlag(priceData, lookbackPeriod = 30) {
     takeProfit,
     stopLossPips,
     takeProfitPips,
-    valid: entry && stopLoss && stopLossPips <= 20 && Math.abs(takeProfitPips - 60) <= 5
+    valid: entry && stopLoss && stopLossPips >= 10 && stopLossPips <= 50
   };
 }
 
@@ -115,8 +115,8 @@ function detectBearishFlag(priceData, lookbackPeriod = 30) {
     // Stop loss is above the highest point of the consolidation
     stopLoss = consolidation.highestHigh;
     
-    // Take profit is entry - (stopLoss - entry) * 3 (3:1 reward-to-risk ratio)
-    takeProfit = entry - (stopLoss - entry) * 3;
+    // Take profit is entry - (stopLoss - entry) * 2 (2:1 reward-to-risk ratio)
+    takeProfit = entry - (stopLoss - entry) * 2;
   }
   
   // Calculate pip distances
@@ -144,7 +144,7 @@ function detectBearishFlag(priceData, lookbackPeriod = 30) {
     takeProfit,
     stopLossPips,
     takeProfitPips,
-    valid: entry && stopLoss && stopLossPips <= 20 && Math.abs(takeProfitPips - 60) <= 5
+    valid: entry && stopLoss && stopLossPips >= 10 && stopLossPips <= 50
   };
 }
 
@@ -581,10 +581,13 @@ function analyzeFlagPatterns(multiTimeframeData, currencyPair) {
       // Calculate stop loss in pips
       stopLossPips = Math.round(Math.abs(entry - stopLoss) / pipSize);
       
-      // If stop loss is within our 20-pip limit, calculate take profit at 60 pips
-      if (stopLossPips <= 20) {
-        takeProfit = entry + (60 * pipSize);
-        takeProfitPips = 60;
+      // Calculate take profit at 2:1 ratio (no longer using fixed 60 pips)
+      takeProfitPips = stopLossPips * 2;
+      takeProfit = entry + (takeProfitPips * pipSize);
+      
+      // Stop loss should be reasonable (neither too small nor too large)
+      // Now we're more flexible with SL size, but still have some limits
+      if (stopLossPips >= 10 && stopLossPips <= 50) {
         validTrade = true;
       }
     }
@@ -612,10 +615,12 @@ function analyzeFlagPatterns(multiTimeframeData, currencyPair) {
       // Calculate stop loss in pips
       stopLossPips = Math.round(Math.abs(entry - stopLoss) / pipSize);
       
-      // If stop loss is within our 20-pip limit, calculate take profit at 60 pips
-      if (stopLossPips <= 20) {
-        takeProfit = entry - (60 * pipSize);
-        takeProfitPips = 60;
+      // Calculate take profit at 2:1 ratio
+      takeProfitPips = stopLossPips * 2;
+      takeProfit = entry - (takeProfitPips * pipSize);
+      
+      // Check if stop loss is reasonable
+      if (stopLossPips >= 10 && stopLossPips <= 50) {
         validTrade = true;
       }
     }

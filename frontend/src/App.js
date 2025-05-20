@@ -136,7 +136,7 @@ function App() {
       </main>
       
       <footer className="App-footer">
-        <p>Flag Pattern Strategy: 4H & 1H Analysis | 3-Touch Trendline Rule | 20-pip SL | 60-pip TP | 3:1 RR</p>
+        <p>Flag Pattern Strategy: 4H & 1H Analysis | 3-Touch Trendline Rule | 2:1 RR</p>
       </footer>
     </div>
   );

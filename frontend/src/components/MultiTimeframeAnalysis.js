@@ -48,8 +48,18 @@ const MultiTimeframeAnalysis = ({ technical }) => {
                 <strong>Take Profit:</strong> {flagPattern.takeProfit} ({flagPattern.takeProfitPips} pips)
               </p>
               <p>
-                <strong>Risk/Reward:</strong> 1:3
+                <strong>Risk/Reward:</strong> 1:2
               </p>
+              {flagPattern.trueRiskRewardRatio && (
+                <p>
+                  <strong>True R/R after spread:</strong> 1:{flagPattern.trueRiskRewardRatio}
+                </p>
+              )}
+              {flagPattern.spreadPips && (
+                <p>
+                  <strong>Current Spread:</strong> {flagPattern.spreadPips} pips
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -57,11 +67,11 @@ const MultiTimeframeAnalysis = ({ technical }) => {
                 <strong>✗ Invalid Trade Setup</strong>
               </p>
               <p>
-                {flagPattern.stopLossPips > 20 ? 
-                  `Stop loss (${flagPattern.stopLossPips} pips) exceeds 20-pip limit` : 
+                {flagPattern.stopLossPips < 10 || flagPattern.stopLossPips > 50 ?
+                  `Stop loss (${flagPattern.stopLossPips} pips) outside 10-50 pip range` :
                   'Pattern does not meet trading criteria'}
               </p>
-              <p>Remember: We only take trades with 20-pip stop loss and 60-pip take profit</p>
+              <p>Remember: We only take trades with 10-50 pip stop loss and 2:1 reward-to-risk ratio</p>
             </>
           )}
         </div>
@@ -89,10 +99,11 @@ const MultiTimeframeAnalysis = ({ technical }) => {
         <ul>
           <li>4-hour chart: Pattern identification and trend direction</li>
           <li>1-hour chart: Entry timing and precise levels</li>
-          <li>Fixed 20-pip stop loss requirement</li>
-          <li>Fixed 60-pip take profit (3:1 reward-to-risk ratio)</li>
+          <li>Adaptive 10-50 pip stop loss range</li>
+          <li>Take profit at 2× stop loss distance (2:1 reward-to-risk ratio)</li>
           <li>3-touch trendline confirmation required</li>
           <li>Entry on pullback to the breakout level</li>
+          <li>Spread-adjusted calculations for true risk/reward</li>
         </ul>
       </div>
     </div>

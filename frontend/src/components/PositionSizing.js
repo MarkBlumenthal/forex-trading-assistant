@@ -10,14 +10,15 @@ const PositionSizing = ({ positionData, decision }) => {
         <div className="position-card">
           <h4>Account Info</h4>
           <p>Balance: £{positionData.accountBalance}</p>
-          <p>Risk per trade: £{positionData.riskPerTrade.toFixed(2)} ({positionData.maxRiskPercent}%)</p>
+          <p>Risk per trade: £{positionData.riskAmount.toFixed(2)} ({positionData.riskPercent}%)</p>
         </div>
         
         <div className="position-card">
           <h4>Trade Targets</h4>
-          <p>Risk: £{positionData.riskPerTrade.toFixed(2)}</p>
+          <p>Risk: £{positionData.riskAmount.toFixed(2)}</p>
           <p>Reward: £{positionData.projectedProfit.toFixed(2)}</p>
-          <p>R:R Ratio: 1:3</p>
+          <p>Target R:R Ratio: 1:2</p>
+          <p>Actual R:R Ratio (after spread): 1:{positionData.trueRiskRewardRatio}</p>
         </div>
         
         <div className="position-card">
@@ -25,11 +26,12 @@ const PositionSizing = ({ positionData, decision }) => {
           <p>Lot size: {positionData.recommendedLotSize}</p>
           <p>Stop loss: {positionData.stopLossPips} pips</p>
           <p>Take profit: {positionData.takeProfitPips} pips</p>
+          <p>Spread: {positionData.spreadPips} pips</p>
         </div>
       </div>
       
       <div className="trade-prices">
-        <h4>Exact Price Levels:</h4>
+        <h4>Exact Price Levels (Includes Spread):</h4>
         <div className="trade-prices-grid">
           <div className="price-card entry">
             <strong>Entry Price:</strong>
@@ -53,7 +55,7 @@ const PositionSizing = ({ positionData, decision }) => {
           <li>Set order type: Market Order</li>
           <li>Direction: {positionData.direction}</li>
           <li>Volume: {positionData.recommendedLotSize} lots</li>
-          <li>Entry Price: {positionData.entryPrice}</li>
+          <li>Entry Price: {positionData.entryPrice} (includes spread)</li>
           <li>Stop Loss: {positionData.stopLossPrice}</li>
           <li>Take Profit: {positionData.takeProfitPrice}</li>
         </ol>
