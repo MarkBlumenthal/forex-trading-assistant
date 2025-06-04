@@ -194,7 +194,7 @@ function makeDecision(technical, news, economic) {
   const flagPattern = technical.flagPattern;
   
   if (flagPattern.patternDetected && flagPattern.validTrade) {
-    // We have a valid flag pattern with appropriate SL and TP (2:1 ratio)
+    // We have a valid flag pattern with 2:1 ratio based on pattern structure
     decision.action = 'TRADE';
     decision.direction = flagPattern.direction;
     decision.confidence = flagPattern.patternQuality;
@@ -203,8 +203,8 @@ function makeDecision(technical, news, economic) {
     decision.reasoning.push(`Flag pattern detected on 4-hour chart with pullback entry on 1-hour chart`);
     decision.reasoning.push(`3-touch trendline rule confirmed`);
     decision.reasoning.push(`Pattern direction: ${flagPattern.direction}`);
-    decision.reasoning.push(`Stop loss: ${flagPattern.stopLossPips} pips`);
-    decision.reasoning.push(`Take profit: ${flagPattern.takeProfitPips} pips (2:1 target ratio)`);
+    decision.reasoning.push(`Stop loss: ${flagPattern.stopLossPips} pips (based on pattern structure)`);
+    decision.reasoning.push(`Take profit: ${flagPattern.takeProfitPips} pips (2:1 ratio)`);
     if (flagPattern.trueRiskRewardRatio) {
       decision.reasoning.push(`True risk-reward ratio after spread: 1:${flagPattern.trueRiskRewardRatio}`);
     }
@@ -219,11 +219,9 @@ function makeDecision(technical, news, economic) {
     decision.action = 'WAIT';
     
     if (flagPattern.patternDetected) {
-      // Pattern detected but not valid for our risk parameters
+      // Pattern detected but not valid for trading (missing pullback or other requirements)
       decision.reasoning.push('Flag pattern detected but does not meet trading criteria');
-      if (flagPattern.stopLossPips < 10 || flagPattern.stopLossPips > 50) {
-        decision.reasoning.push(`Required stop loss (${flagPattern.stopLossPips} pips) outside acceptable range of 10-50 pips`);
-      }
+      decision.reasoning.push('Waiting for pullback entry or pattern completion');
     } else {
       // No pattern detected
       decision.reasoning.push('No flag pattern with pullback entry detected');

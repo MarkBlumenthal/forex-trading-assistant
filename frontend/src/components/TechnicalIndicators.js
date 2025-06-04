@@ -39,13 +39,19 @@ const TechnicalIndicators = ({ technical }) => {
             <p>
               <strong>Valid Trade:</strong> {flagPattern.validTrade ? 'Yes' : 'No'}
             </p>
-            {!flagPattern.validTrade && flagPattern.stopLossPips && (
+            {flagPattern.stopLossPips && (
               <p>
-                <strong>Invalid Reason:</strong> {
-                  flagPattern.stopLossPips > 20 ? 
-                  `Stop loss (${flagPattern.stopLossPips} pips) exceeds 20-pip limit` : 
-                  'Trade does not meet criteria'
-                }
+                <strong>Stop Loss Distance:</strong> {flagPattern.stopLossPips} pips (pattern-based)
+              </p>
+            )}
+            {flagPattern.takeProfitPips && (
+              <p>
+                <strong>Take Profit Distance:</strong> {flagPattern.takeProfitPips} pips (2:1 ratio)
+              </p>
+            )}
+            {!flagPattern.validTrade && (
+              <p>
+                <strong>Status:</strong> Waiting for pattern completion or pullback entry
               </p>
             )}
           </>

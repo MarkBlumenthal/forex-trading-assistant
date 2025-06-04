@@ -48,7 +48,7 @@ const MultiTimeframeAnalysis = ({ technical }) => {
                 <strong>Take Profit:</strong> {flagPattern.takeProfit} ({flagPattern.takeProfitPips} pips)
               </p>
               <p>
-                <strong>Risk/Reward:</strong> 1:2
+                <strong>Risk/Reward:</strong> 1:2 (based on pattern structure)
               </p>
               {flagPattern.trueRiskRewardRatio && (
                 <p>
@@ -64,14 +64,12 @@ const MultiTimeframeAnalysis = ({ technical }) => {
           ) : (
             <>
               <p style={{ color: '#c62828' }}>
-                <strong>✗ Invalid Trade Setup</strong>
+                <strong>✗ Incomplete Pattern</strong>
               </p>
               <p>
-                {flagPattern.stopLossPips < 10 || flagPattern.stopLossPips > 50 ?
-                  `Stop loss (${flagPattern.stopLossPips} pips) outside 10-50 pip range` :
-                  'Pattern does not meet trading criteria'}
+                Pattern detected but waiting for pullback entry or other completion criteria
               </p>
-              <p>Remember: We only take trades with 10-50 pip stop loss and 2:1 reward-to-risk ratio</p>
+              <p>The system will only trade when all pattern requirements are met</p>
             </>
           )}
         </div>
@@ -99,11 +97,12 @@ const MultiTimeframeAnalysis = ({ technical }) => {
         <ul>
           <li>4-hour chart: Pattern identification and trend direction</li>
           <li>1-hour chart: Entry timing and precise levels</li>
-          <li>Adaptive 10-50 pip stop loss range</li>
-          <li>Take profit at 2× stop loss distance (2:1 reward-to-risk ratio)</li>
+          <li>Dynamic stop loss based on pattern structure (no pip limits)</li>
+          <li>Take profit at exactly 2× stop loss distance (pure 2:1 ratio)</li>
           <li>3-touch trendline confirmation required</li>
           <li>Entry on pullback to the breakout level</li>
           <li>Spread-adjusted calculations for true risk/reward</li>
+          <li>Pattern structure determines all risk parameters</li>
         </ul>
       </div>
     </div>

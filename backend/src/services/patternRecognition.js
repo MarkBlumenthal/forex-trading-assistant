@@ -70,7 +70,7 @@ function detectBullishFlag(priceData, lookbackPeriod = 30) {
     takeProfit,
     stopLossPips,
     takeProfitPips,
-    valid: entry && stopLoss && stopLossPips >= 10 && stopLossPips <= 50
+    valid: entry && stopLoss && pullback.detected // Only require entry, stop loss and pullback - no pip limits
   };
 }
 
@@ -144,7 +144,7 @@ function detectBearishFlag(priceData, lookbackPeriod = 30) {
     takeProfit,
     stopLossPips,
     takeProfitPips,
-    valid: entry && stopLoss && stopLossPips >= 10 && stopLossPips <= 50
+    valid: entry && stopLoss && pullback.detected // Only require entry, stop loss and pullback - no pip limits
   };
 }
 
@@ -581,15 +581,12 @@ function analyzeFlagPatterns(multiTimeframeData, currencyPair) {
       // Calculate stop loss in pips
       stopLossPips = Math.round(Math.abs(entry - stopLoss) / pipSize);
       
-      // Calculate take profit at 2:1 ratio (no longer using fixed 60 pips)
+      // Calculate take profit at 2:1 ratio (always exactly 2x the stop loss distance)
       takeProfitPips = stopLossPips * 2;
       takeProfit = entry + (takeProfitPips * pipSize);
       
-      // Stop loss should be reasonable (neither too small nor too large)
-      // Now we're more flexible with SL size, but still have some limits
-      if (stopLossPips >= 10 && stopLossPips <= 50) {
-        validTrade = true;
-      }
+      // Valid trade as long as we have entry, stop loss, and pullback - no pip restrictions
+      validTrade = true;
     }
     
     // Pattern quality score (0-100)
@@ -615,14 +612,12 @@ function analyzeFlagPatterns(multiTimeframeData, currencyPair) {
       // Calculate stop loss in pips
       stopLossPips = Math.round(Math.abs(entry - stopLoss) / pipSize);
       
-      // Calculate take profit at 2:1 ratio
+      // Calculate take profit at 2:1 ratio (always exactly 2x the stop loss distance)
       takeProfitPips = stopLossPips * 2;
       takeProfit = entry - (takeProfitPips * pipSize);
       
-      // Check if stop loss is reasonable
-      if (stopLossPips >= 10 && stopLossPips <= 50) {
-        validTrade = true;
-      }
+      // Valid trade as long as we have entry, stop loss, and pullback - no pip restrictions
+      validTrade = true;
     }
     
     // Pattern quality score (0-100)
