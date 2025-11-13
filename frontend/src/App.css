@@ -887,7 +887,7 @@ button:disabled {
   position: absolute;
   font-size: 34px;  /* slightly bigger */
   opacity: 0.85;    /* much more visible */
-  animation: floatMoney 8s ease-in-out infinite;
+  animation: floatMoney 2s ease-in-out infinite;
   text-shadow: 0 0 12px rgba(34, 197, 94, 0.95);  /* neon green glow */
   filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.9));
 }
@@ -897,42 +897,42 @@ button:disabled {
 .money-layer-left .money-icon:nth-child(1) {
   top: 10%;
   left: 20%;
-  animation-duration: 7s;
+  animation-duration: 1.7s;
   animation-delay: -2s;
 }
 
 .money-layer-left .money-icon:nth-child(2) {
   top: 45%;
   left: 40%;
-  animation-duration: 6s;
+  animation-duration: 1.6s;
   animation-delay: -3s;
 }
 
 .money-layer-left .money-icon:nth-child(3) {
   top: 75%;
   left: 10%;
-  animation-duration: 9s;
+  animation-duration: 1.9s;
   animation-delay: -4s;
 }
 
 .money-layer-right .money-icon:nth-child(1) {
   top: 15%;
   right: 20%;
-  animation-duration: 7s;
+  animation-duration: 1.7s;
   animation-delay: -2s;
 }
 
 .money-layer-right .money-icon:nth-child(2) {
   top: 50%;
   right: 35%;
-  animation-duration: 6s;
+  animation-duration: 1.6s;
   animation-delay: -3s;
 }
 
 .money-layer-right .money-icon:nth-child(3) {
   top: 80%;
   right: 15%;
-  animation-duration: 9s;
+  animation-duration: 1.9s;
   animation-delay: -4s;
 }
 
