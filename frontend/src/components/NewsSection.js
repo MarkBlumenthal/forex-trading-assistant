@@ -31,23 +31,19 @@ const NewsSection = ({ news }) => {
       </div>
 
       {news.keyEvents.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          <h4>Key Events</h4>
-          {news.keyEvents.map((event, index) => (
-            <div key={index} style={{
-              padding: '10px',
-              margin: '5px 0',
-              background: '#ffebee',
-              borderRadius: '4px'
-            }}>
-              <strong>{event.title}</strong>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                Impact: {event.impact}
-              </div>
-            </div>
-          ))}
+  <div style={{ marginBottom: '20px' }}>
+    <h4>Key Events</h4>
+    {news.keyEvents.map((event, index) => (
+      <div key={index} className="news-key-event">
+        <strong>{event.title}</strong>
+        <div className="news-key-event-meta">
+          Impact: {event.impact}
         </div>
-      )}
+      </div>
+    ))}
+  </div>
+)}
+
 
       <h4>Latest News</h4>
       <div className="news-list">
