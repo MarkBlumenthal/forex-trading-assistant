@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Dashboard from './components/Dashboard';
 import AccountSettings from './components/AccountSettings';
+import { Coins, RefreshCw, TrendingUp, Clock } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -16,13 +17,14 @@ function App() {
     targetProfit: 50
   });
 
+  // Fetch available currency pairs from backend
   useEffect(() => {
-    // Fetch available currency pairs
-    axios.get('http://localhost:5000/api/currency-pairs')
-      .then(response => {
-        setCurrencyPairs(response.data);
+    axios
+      .get('http://localhost:5000/api/currency-pairs')
+      .then((response) => {
+        setCurrencyPairs(response.data || []);
       })
-      .catch(err => console.error('Error fetching currency pairs:', err));
+      .catch((err) => console.error('Error fetching currency pairs:', err));
   }, []);
 
   const fetchAnalysis = useCallback(async () => {
@@ -86,57 +88,72 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Forex Flag Pattern Trader</h1>
-        <div className="header-info">
-          <span>Multi-Currency Flag Pattern Analysis</span>
-          {lastUpdate && <span>Last Update: {lastUpdate}</span>}
+        <div className="header-left">
+          <div className="logo-icon">
+            <Coins className="icon-large" />
+          </div>
+          <div className="header-text">
+            <h1>Forex Flag Pattern Trader</h1>
+            <div className="header-info">
+              <span>Multi-Currency Flag Pattern Analysis</span>
+              {lastUpdate && (
+                <span className="last-update">
+                  <Clock className="icon-inline" />
+                  <span style={{ marginLeft: 4 }}>Last Update: {lastUpdate}</span>
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </header>
-      
+
       <main>
         {loading && <div className="loading">Loading analysis...</div>}
         {error && <div className="error">{error}</div>}
-        
+
         <div className="currency-selector">
-          {currencyPairs.map(pair => (
+          {currencyPairs.map((pair) => (
             <button
               key={pair}
               onClick={() => handlePairChange(pair)}
               className={selectedPair === pair ? 'active' : ''}
             >
-              {pair}
+              <Coins className="icon-inline" />
+              <span style={{ marginLeft: 4 }}>{pair}</span>
             </button>
           ))}
         </div>
-        
+
         <div className="controls">
           <button onClick={runAnalysisNow} disabled={loading}>
-            Analyze {selectedPair} Now
+            <TrendingUp className="icon-inline" />
+            <span style={{ marginLeft: 6 }}>Analyze {selectedPair} Now</span>
           </button>
           <button onClick={fetchAnalysis} disabled={loading}>
-            Refresh
+            <RefreshCw className="icon-inline" />
+            <span style={{ marginLeft: 6 }}>Refresh</span>
           </button>
         </div>
-        
-        <AccountSettings 
+
+        <AccountSettings
           settings={accountSettings}
           onUpdate={updateAccountSettings}
         />
-        
-        {analysis && analysis.decision && (
-          <Dashboard analysis={analysis} />
-        )}
-        
+
+        {analysis && analysis.decision && <Dashboard analysis={analysis} />}
+
         {analysis && !analysis.decision && (
           <div className="no-data">
             <p>No analysis available yet for {selectedPair}.</p>
-            <p>Click 'Analyze Now' to run analysis.</p>
+            <p>Click &apos;Analyze Now&apos; to run analysis.</p>
           </div>
         )}
       </main>
-      
+
       <footer className="App-footer">
-        <p>Flag Pattern Strategy: 4H & 1H Analysis | 3-Touch Trendline Rule | 2:1 RR</p>
+        <p>
+          Flag Pattern Strategy: 4H &amp; 1H Analysis | 3-Touch Trendline Rule | 2:1 RR
+        </p>
       </footer>
     </div>
   );
