@@ -11,10 +11,14 @@ const Dashboard = ({ analysis }) => {
 
   const getDecisionColor = (decision) => {
     switch (decision) {
-      case 'BUY': return '#2e7d32';
-      case 'SELL': return '#c62828';
-      case 'WAIT': return '#f57c00';
-      default: return '#666';
+      case 'BUY':
+      case 'SELL':
+        // When it tells you to trade → green
+        return '#22c55e';
+      case 'WAIT':
+      default:
+        // "DO NOT TRADE" or anything non-trade → red
+        return '#ef4444';
     }
   };
 
@@ -44,7 +48,7 @@ const Dashboard = ({ analysis }) => {
         <div className="decision-content">
           <div 
             className={`decision-action ${analysis.decision}`}
-            style={{ color: getDecisionColor(analysis.direction) }}
+            style={{ color: getDecisionColor(analysis.decision) }}
           >
             {getActionText()}
           </div>
