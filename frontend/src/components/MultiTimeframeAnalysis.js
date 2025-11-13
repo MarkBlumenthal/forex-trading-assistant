@@ -25,13 +25,8 @@ const MultiTimeframeAnalysis = ({ technical }) => {
       </div>
       
       {flagPattern.patternDetected ? (
-        <div className="flag-pattern-info" style={{
-          backgroundColor: flagPattern.validTrade ? '#e3f2fd' : '#ffebee',
-          padding: '15px',
-          borderRadius: '5px',
-          marginBottom: '20px',
-          borderLeft: `4px solid ${getDirectionColor(flagPattern.direction)}`
-        }}>
+        <div className="flag-pattern-info">
+
           <h4>{flagPattern.direction === 'BUY' ? 'Bullish' : 'Bearish'} Flag Pattern Detected</h4>
           
           {flagPattern.validTrade ? (

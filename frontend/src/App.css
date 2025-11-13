@@ -467,6 +467,19 @@ button:disabled {
   color: var(--muted-foreground);
 }
 
+/* Make sure the news card matches other dark cards */
+.news-section {
+  background: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.news-section .news-item {
+  background: var(--muted);
+}
+
+
 /* Economic calendar */
 .economic-calendar {
   max-height: 400px;
@@ -752,13 +765,31 @@ button:disabled {
   color: var(--primary-foreground);
 }
 
+/* Force ApexCharts to use dark background */
 .candlestick-chart {
-  width: 100%;
+  background: var(--card);
   border-radius: var(--radius-lg);
   padding: 15px;
-  background-color: var(--card);
   border: 1px solid var(--border);
 }
+
+.candlestick-chart .apexcharts-canvas,
+.candlestick-chart .apexcharts-inner,
+.candlestick-chart svg {
+  background-color: var(--card) !important;
+}
+
+.candlestick-chart .apexcharts-xaxis text,
+.candlestick-chart .apexcharts-yaxis text {
+  fill: var(--muted-foreground) !important;
+}
+
+.candlestick-chart .apexcharts-tooltip {
+  background-color: #020617 !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
 
 .chart-placeholder {
   text-align: center;
