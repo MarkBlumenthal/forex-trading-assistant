@@ -191,6 +191,34 @@ button:disabled {
   box-shadow: none;
 }
 
+/* Make the "Analyze Now" button gold */
+.controls button:first-child {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  box-shadow: 0 10px 24px rgba(251, 191, 36, 0.4);
+}
+
+.controls button:first-child:hover {
+  background-color: #facc15; /* slightly brighter gold */
+}
+
+/* Make "Edit Settings" button gold */
+.edit-settings-button {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  box-shadow: 0 10px 24px rgba(251, 191, 36, 0.4);
+}
+
+.edit-settings-button:hover {
+  background-color: #facc15;
+}
+
+/* Gold coins only in the currency selector buttons */
+.currency-selector .icon-inline {
+  color: var(--accent);
+}
+
+
 /* Dashboard layout */
 .dashboard {
   display: flex;
@@ -224,6 +252,7 @@ button:disabled {
 
 .decision-panel h2 {
   margin-bottom: 10px;
+   color: var(--primary);
 }
 
 .decision-symbol {
@@ -634,6 +663,12 @@ button:disabled {
 .account-settings h2 {
   margin-bottom: 15px;
 }
+
+/* Purple title for Account Settings */
+.account-settings h3 {
+  color: var(--primary);
+}
+
 
 .settings-grid {
   display: grid;

@@ -20,7 +20,13 @@ const AccountSettings = ({ settings, onUpdate }) => {
         <div className="settings-display">
           <p>Account Balance: £{settings.accountBalance}</p>
           <p>Target Profit per Trade: £{settings.targetProfit}</p>
-          <button onClick={() => setIsEditing(true)}>Edit Settings</button>
+          <button
+  className="edit-settings-button"
+  onClick={() => setIsEditing(true)}
+>
+  Edit Settings
+</button>
+
         </div>
       </div>
     );

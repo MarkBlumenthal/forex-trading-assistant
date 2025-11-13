@@ -56,7 +56,7 @@ const Dashboard = ({ analysis }) => {
               percent={analysis.confidence / 100}
               arcWidth={0.3}
               colors={['#c62828', '#f57c00', '#2e7d32']}
-              textColor="#000"
+              textColor="#fbbf24"
               formatTextValue={() => `${analysis.confidence}%`}
             />
             <p>Pattern Quality</p>
