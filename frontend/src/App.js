@@ -87,6 +87,18 @@ function App() {
 
   return (
     <div className="App">
+         {/* Floating money background layers */}
+    <div className="money-layer money-layer-left">
+  <span className="money-icon">💵</span>
+  <span className="money-icon">💵</span>
+  <span className="money-icon">💵</span>
+</div>
+<div className="money-layer money-layer-right">
+  <span className="money-icon">💵</span>
+  <span className="money-icon">💵</span>
+  <span className="money-icon">💵</span>
+</div>
+
       <header className="App-header">
         <div className="header-left">
           <div className="logo-icon">

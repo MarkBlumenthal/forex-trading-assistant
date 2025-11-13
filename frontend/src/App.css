@@ -859,6 +859,98 @@ button:disabled {
   color: var(--muted-foreground);
 }
 
+/* Floating money side animations */
+.App {
+  position: relative;
+  z-index: 1;
+}
+
+.money-layer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 110px;              /* width of the side strip */
+  pointer-events: none;      /* don't block clicks */
+  z-index: 5;                /* behind main content */
+  overflow: hidden;
+}
+
+.money-layer-left {
+  left: 0;
+}
+
+.money-layer-right {
+  right: 0;
+}
+
+.money-icon {
+  position: absolute;
+  font-size: 34px;  /* slightly bigger */
+  opacity: 0.85;    /* much more visible */
+  animation: floatMoney 8s ease-in-out infinite;
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.95);  /* neon green glow */
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.9));
+}
+
+
+/* Sprinkle the coins vertically at different positions & speeds */
+.money-layer-left .money-icon:nth-child(1) {
+  top: 10%;
+  left: 20%;
+  animation-duration: 7s;
+  animation-delay: -2s;
+}
+
+.money-layer-left .money-icon:nth-child(2) {
+  top: 45%;
+  left: 40%;
+  animation-duration: 6s;
+  animation-delay: -3s;
+}
+
+.money-layer-left .money-icon:nth-child(3) {
+  top: 75%;
+  left: 10%;
+  animation-duration: 9s;
+  animation-delay: -4s;
+}
+
+.money-layer-right .money-icon:nth-child(1) {
+  top: 15%;
+  right: 20%;
+  animation-duration: 7s;
+  animation-delay: -2s;
+}
+
+.money-layer-right .money-icon:nth-child(2) {
+  top: 50%;
+  right: 35%;
+  animation-duration: 6s;
+  animation-delay: -3s;
+}
+
+.money-layer-right .money-icon:nth-child(3) {
+  top: 80%;
+  right: 15%;
+  animation-duration: 9s;
+  animation-delay: -4s;
+}
+
+
+/* Floating motion */
+@keyframes floatMoney {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-18px) translateX(6px) rotate(8deg);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+}
+
+
 /* Footer */
 .App-footer {
   margin-top: 40px;
