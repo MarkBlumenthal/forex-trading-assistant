@@ -3,7 +3,7 @@ import React from 'react';
 const MultiTimeframeAnalysis = ({ technical }) => {
   if (!technical || !technical.multiTimeframe) return null;
   
-  const { fourHour, oneHour, overallDirection, flagPattern } = technical.multiTimeframe;
+  const { overallDirection, flagPattern } = technical.multiTimeframe;
   
   const getDirectionColor = (direction) => {
     switch(direction) {

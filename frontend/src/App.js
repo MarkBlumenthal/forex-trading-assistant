@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Dashboard from './components/Dashboard';
 import AccountSettings from './components/AccountSettings';
@@ -25,7 +25,7 @@ function App() {
       .catch(err => console.error('Error fetching currency pairs:', err));
   }, []);
 
-  const fetchAnalysis = async () => {
+  const fetchAnalysis = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -40,7 +40,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPair]);
 
   const runAnalysisNow = async () => {
     setLoading(true);
@@ -81,7 +81,7 @@ function App() {
     if (selectedPair) {
       fetchAnalysis();
     }
-  }, [selectedPair]);
+  }, [selectedPair, fetchAnalysis]);
 
   return (
     <div className="App">
