@@ -5,6 +5,10 @@ import AccountSettings from './components/AccountSettings';
 import { Coins, RefreshCw, TrendingUp, Clock } from 'lucide-react';
 import './App.css';
 
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
+
 function App() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -21,7 +25,7 @@ function App() {
   // Fetch available currency pairs from backend
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/currency-pairs')
+      .get(`${API_BASE_URL}/api/currency-pairs`)
       .then((response) => {
         setCurrencyPairs(response.data || []);
       })
@@ -39,7 +43,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:5000/api/analysis', {
+      const response = await axios.get('${API_BASE_URL}/api/analysis', {
         params: { pair: selectedPair }
       });
       setAnalysis(response.data);
@@ -56,7 +60,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/analyze-now', {
+      const response = await axios.post('${API_BASE_URL}/api/analyze-now', {
         currencyPair: selectedPair,
         timeframe: 'current',
         accountSettings
@@ -73,7 +77,7 @@ function App() {
 
   const updateAccountSettings = async (newSettings) => {
     try {
-      await axios.post('http://localhost:5000/api/account-settings', newSettings);
+      await axios.post('${API_BASE_URL}/api/account-settings', newSettings);
       setAccountSettings(newSettings);
       // Re-run analysis with new settings
       await runAnalysisNow();
