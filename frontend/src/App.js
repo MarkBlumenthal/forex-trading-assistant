@@ -16,6 +16,7 @@ function App() {
     accountBalance: 1000,
     targetProfit: 50
   });
+  const [showWarning, setShowWarning] = useState(false);
 
   // Fetch available currency pairs from backend
   useEffect(() => {
@@ -25,6 +26,13 @@ function App() {
         setCurrencyPairs(response.data || []);
       })
       .catch((err) => console.error('Error fetching currency pairs:', err));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWarning(true);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchAnalysis = useCallback(async () => {
@@ -352,6 +360,27 @@ function App() {
           Flag Pattern Strategy: 4H &amp; 1H Analysis | 3-Touch Trendline Rule | 2:1 RR
         </p>
       </footer>
+
+      {showWarning && (
+        <div className="warning-overlay">
+          <div className="warning-modal">
+            <h2>Important Warning</h2>
+            <p>
+              This app uses advanced algorithms and trading strategies to advise traders which
+              direction to trade in Forex. Due to the advanced nature of the strategies used, it
+              can take many days until a trading setup is found. Most of the time it will advise
+              not to trade until all requirements are met. Please note this app is for research
+              purposes only and not meant to be used for actual trading.
+            </p>
+            <button
+              className="warning-close-button"
+              onClick={() => setShowWarning(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
