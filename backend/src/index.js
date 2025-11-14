@@ -5,10 +5,18 @@ const { runAnalysis } = require('./services/analysisEngine');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for frontend
-// Enable CORS for frontend (dev + production)
+// Enable CORS for frontend (local + Render)
+const allowedOrigins = [
+  'http://localhost:3000',                             // local dev
+  'https://forex-trading-assistant-1.onrender.com'     // Render frontend
+];
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
   res.header(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept'
@@ -21,7 +29,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
 
 app.use(express.json());
 
