@@ -871,7 +871,7 @@ button:disabled {
   bottom: 0;
   width: 110px;              /* width of the side strip */
   pointer-events: none;      /* don't block clicks */
-  z-index: 5;                /* behind main content */
+  z-index: 5;                /* above main content, but non-clickable */
   overflow: hidden;
 }
 
@@ -883,72 +883,75 @@ button:disabled {
   right: 0;
 }
 
-.money-icon {
+/* New matrix-style columns */
+.money-column {
   position: absolute;
-  font-size: 34px;  /* slightly bigger */
-  opacity: 0.85;    /* much more visible */
-  animation: floatMoney 2s ease-in-out infinite;
-  text-shadow: 0 0 12px rgba(34, 197, 94, 0.95);  /* neon green glow */
+  width: 50%;                    /* two columns per side */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 32px;
+  color: #22c55e;                /* bright green */
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.95);
   filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.9));
 }
 
-
-/* Sprinkle the coins vertically at different positions & speeds */
-.money-layer-left .money-icon:nth-child(1) {
-  top: 10%;
-  left: 20%;
-  animation-duration: 1.7s;
-  animation-delay: -2s;
+/* Left side: nudge columns inward */
+.money-layer-left .money-column:first-child {
+  left: 5px;
 }
 
-.money-layer-left .money-icon:nth-child(2) {
-  top: 45%;
-  left: 40%;
-  animation-duration: 1.6s;
-  animation-delay: -3s;
+.money-layer-left .money-column:last-child {
+  right: 5px;
 }
 
-.money-layer-left .money-icon:nth-child(3) {
-  top: 75%;
-  left: 10%;
-  animation-duration: 1.9s;
-  animation-delay: -4s;
+/* Right side: same idea */
+.money-layer-right .money-column:first-child {
+  left: 5px;
 }
 
-.money-layer-right .money-icon:nth-child(1) {
-  top: 15%;
-  right: 20%;
-  animation-duration: 1.7s;
-  animation-delay: -2s;
+.money-layer-right .money-column:last-child {
+  right: 5px;
 }
 
-.money-layer-right .money-icon:nth-child(2) {
-  top: 50%;
-  right: 35%;
-  animation-duration: 1.6s;
-  animation-delay: -3s;
+/* Downward stream: top → bottom */
+.column-down {
+  top: -100%;
+  animation: moneyDown 40.5s linear infinite;
 }
 
-.money-layer-right .money-icon:nth-child(3) {
-  top: 80%;
-  right: 15%;
-  animation-duration: 1.9s;
-  animation-delay: -4s;
+/* Upward stream: bottom → top */
+.column-up {
+  bottom: -100%;
+  animation: moneyUp 40.5s linear infinite;
 }
 
+/* Individual dollar signs */
+.money-icon {
+  display: block;
+}
 
-/* Floating motion */
-@keyframes floatMoney {
+/* Keyframes for the matrix effect */
+@keyframes moneyDown {
   0% {
-    transform: translateY(0px) translateX(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-18px) translateX(6px) rotate(8deg);
+    transform: translateY(0);
   }
   100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg);
+    transform: translateY(200%);
   }
 }
+
+@keyframes moneyUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-200%);
+  }
+}
+
+
 
 
 /* Footer */
@@ -991,4 +994,9 @@ button:disabled {
   .decision-content {
     grid-template-columns: 1fr;
   }
+
+ .money-layer {
+    display: none;
+  }
+
 }
